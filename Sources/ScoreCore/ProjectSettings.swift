@@ -37,6 +37,16 @@ public struct PerformanceSettings: Codable, Sendable {
     public var mutedPartIds: [String]?
     public var soloPartIds: [String]?
     public var reverbWetDryMix: Double? = 12
+    public var masterVolume: Double?
+    public var voiceVolumes: [VoiceVolume]?
+}
+public struct VoiceVolume: Codable, Sendable {
+    public var partId: String
+    public var voiceId: String
+    public var volume: Double
+    public init(partId: String, voiceId: String, volume: Double) {
+        self.partId = partId; self.voiceId = voiceId; self.volume = volume
+    }
 }
 public struct HumanizeSettings: Codable, Sendable {
     public var seed: UInt32 = 7

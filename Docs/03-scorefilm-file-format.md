@@ -146,6 +146,20 @@ MusicXML 支持在 part 内声明多个 `score-instrument`，并通过音符的 
 
 可选的 `performance.reverbWetDryMix` 表示总线混响比例，范围 0 至 100，缺失时采用 12；0 关闭混响。它与原始音符、踏板共同离线合成，进入音频缓存 key，不改变轨迹资格。钢琴双谱表共用同一物理延音踏板，谱表编号只定位踏板符号；需要独立踏板时使用不同逻辑 part。
 
+可选 `performance.masterVolume` 是校准之后的总音量，线性范围 0–1（界面 0%–100%），缺失为 1。可选 `performance.voiceVolumes` 按 `(partId, voiceId)` 保存独立声部的线性音量，范围 0–4（界面 0%–400%）；未列出的声部为 1，同一组合不能重复，引用必须存在。不同 part 中同名的 voice 相互独立，换乐器或跨段配器继续使用该声部的音量。0 表示该声部无声，仍保留曲谱时长、光点和原始力度。示例：
+
+```json
+{
+  "masterVolume": 0.8,
+  "voiceVolumes": [
+    { "partId": "P1", "voiceId": "1", "volume": 3 },
+    { "partId": "P1", "voiceId": "5", "volume": 0.5 }
+  ]
+}
+```
+
+以上片段位于 `performance` 内；在《致爱丽丝》示例中，声部 1 为蓝色主旋律，声部 5 为橙色伴奏。恢复 100% 可以移除对应可选项，保存时不会从旧 JSON 中恢复已清除的音量设置。设置进入音频缓存身份，预览和成片共用相同 PCM。
+
 原谱缺失 GM program 或音符引用了未声明的乐器时，保留记谱并要求明确的声部或段落配器；不默认改为钢琴。
 
 MusicXML 的 `<sound>` 既可位于小节，也可位于 direction；其声音偏移优先于 direction 偏移。导入器处理这两种形式的速度、力度与完整踩下／释放踏板，未验证的半踏板及声音切换会报告。依据为 [MusicXML sound 定义](https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/sound/)。

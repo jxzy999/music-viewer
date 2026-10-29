@@ -19,6 +19,19 @@
         "tempoScale": { "type": "number", "minimum": 0.1, "maximum": 4 },
         "fermataMultiplier": { "type": "number", "minimum": 1, "maximum": 10 },
         "reverbWetDryMix": { "type": "number", "minimum": 0, "maximum": 100, "default": 12 },
+        "masterVolume": { "type": "number", "minimum": 0, "maximum": 1, "default": 1 },
+        "voiceVolumes": {
+          "type": "array", "uniqueItems": true,
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["partId", "voiceId", "volume"],
+            "properties": {
+              "partId": { "$ref": "#/$defs/id" },
+              "voiceId": { "$ref": "#/$defs/id" },
+              "volume": { "type": "number", "minimum": 0, "maximum": 4, "default": 1 }
+            }
+          }
+        },
         "mutedPartIds": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/id" } },
         "soloPartIds": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/id" } },
         "humanize": {

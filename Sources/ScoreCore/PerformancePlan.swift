@@ -8,6 +8,7 @@ public struct PlaybackNote: Identifiable, Sendable {
     public let staff: Int
     public let pitch: Int
     public let velocity: Int
+    public var volume = 1.0
     public let instrument: Instrument
     public var instanceID: String
     public let start: Double

@@ -167,7 +167,7 @@ final class WorkspaceSession {
         }
     }
 
-    func prepare() {
+    func prepare(resumingAt position: Double? = nil, autoplay: Bool = false) {
         guard !isClosing, let snapshot = project else { return }
         cancel(); transport.stop()
         let id = UUID(); jobID = id; isBusy = true; needsPreparation = true; progress = 0; error = nil
@@ -228,6 +228,13 @@ final class WorkspaceSession {
                 }
                 try Task.checkCancellation(); guard id == jobID else { return }
                 try transport.load(rendered)
+                if let position {
+                    if position >= rendered.duration - 0.02 { transport.seek(to: rendered.duration) }
+                    else {
+                        transport.seek(to: position)
+                        if autoplay { try transport.play() }
+                    }
+                }
                 metrics["audioSeconds"] = ProcessInfo.processInfo.systemUptime - checkpoint
                 metrics["totalPrepareSeconds"] = ProcessInfo.processInfo.systemUptime - began
                 preparationMetrics = metrics
@@ -238,8 +245,10 @@ final class WorkspaceSession {
         }
     }
 
-    func edit(_ mutation: (inout ProjectSettings) -> Void) {
+    func edit(preservingPlayback: Bool = false, _ mutation: (inout ProjectSettings) -> Void) {
         guard !isBusy, var value = project else { return }
+        let position = preservingPlayback ? transport.time : nil
+        let autoplay = preservingPlayback && transport.isPlaying
         let previous = value.settings
         mutation(&value.settings)
         let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys]
@@ -256,7 +265,7 @@ final class WorkspaceSession {
         project = value; dirty = true
         scheduleAutosave()
         if visualOnly, let layout { updateVisuals(value, layout: layout) }
-        else { transport.pause(); prepare() }
+        else { transport.pause(); prepare(resumingAt: position, autoplay: autoplay) }
     }
 
     private func updateVisuals(_ snapshot: ProjectFile, layout: LayoutSnapshot) {

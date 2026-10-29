@@ -260,6 +260,17 @@ final class SceneRegressionTests: XCTestCase {
         let globalPeak = (0..<Int(samples.frameLength)).reduce(Float(0)) { max($0, abs(data[$1])) }
         XCTAssertLessThanOrEqual(globalPeak, 0.89126)
         XCTAssertGreaterThan(rendered.duration, 3)
+        p.settings.performance.masterVolume = 0.5
+        p.settings.performance.voiceVolumes = [VoiceVolume(partId: "P1", voiceId: "9", volume: 0.25)]
+        let adjusted = try await OfflineAudioRenderer(validationInstrument: pulse).render(plan: PerformanceCompiler.compile(p), project: p, to: folder.appendingPathComponent("adjusted.caf"), progress: { _ in })
+        let adjustedFile = try AVAudioFile(forReading: adjusted.url)
+        let adjustedSamples = try XCTUnwrap(AVAudioPCMBuffer(pcmFormat: adjustedFile.processingFormat, frameCapacity: AVAudioFrameCount(adjustedFile.length)))
+        try adjustedFile.read(into: adjustedSamples)
+        let adjustedData = try XCTUnwrap(adjustedSamples.floatChannelData?[0])
+        let earlyPeak = (0..<4800).reduce(Float(0)) { max($0, abs(adjustedData[$1])) }
+        let latePeak = (96000..<100800).reduce(Float(0)) { max($0, abs(adjustedData[$1])) }
+        XCTAssertEqual(earlyPeak, peak(0) * 0.5, accuracy: 0.0001)
+        XCTAssertEqual(latePeak, peak(2) * 0.125, accuracy: 0.0001)
         XCTAssertFalse(try FileManager.default.contentsOfDirectory(atPath: folder.path).contains { $0.hasPrefix("stem-") || $0.hasPrefix("mix-") || $0.hasPrefix("raw-") })
     }
 

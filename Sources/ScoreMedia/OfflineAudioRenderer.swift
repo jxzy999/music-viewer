@@ -20,14 +20,20 @@ public actor OfflineAudioRenderer {
     public func render(plan: PerformancePlan, project: ProjectFile, to url: URL, progress: @Sendable (Double) -> Void) throws -> RenderedAudio {
         let instances = Set(plan.notes.map(\.instanceID)).sorted()
         guard instances.count <= 128 else { throw ScoreError.unsupported("此曲需要超过 128 个独立乐器实例，暂不支持。") }
-        guard instances.count > 8 else {
+        guard instances.count > 8 || plan.notes.contains(where: { $0.volume != 1 }) else {
             return try renderSingle(plan: plan, project: project, to: url, instances: nil, normalize: true, progress: progress)
         }
-        // Keep each native audio graph small. All stems use the original sample
-        // clock and gain, then receive one shared peak attenuation after mixing.
+        // Render unscaled stems on the original clock. Keep a reference mix at
+        // unity faders so output calibration cannot undo the user's balance.
         guard !FileManager.default.fileExists(atPath: url.path) else { throw ScoreError.invalid("音频缓存目标已存在。") }
         let folder = url.deletingLastPathComponent()
-        let groups = stride(from: 0, to: instances.count, by: 8).map { Set(instances[$0..<min($0 + 8, instances.count)]) }
+        var volumes: [String: Double] = [:]
+        for note in plan.notes where volumes[note.instanceID] == nil { volumes[note.instanceID] = note.volume }
+        let byVolume = Dictionary(grouping: instances, by: { volumes[$0] ?? 1 })
+        let groups = byVolume.keys.sorted().flatMap { volume in
+            let ids = byVolume[volume]!
+            return stride(from: 0, to: ids.count, by: 8).map { (instances: Set(ids[$0..<min($0 + 8, ids.count)]), volume: Float(volume)) }
+        }
         var stems: [RenderedAudio] = []
         let mixedURL = folder.appendingPathComponent("mix-\(UUID().uuidString).caf")
         var completed = false
@@ -39,7 +45,7 @@ public actor OfflineAudioRenderer {
         for (index, group) in groups.enumerated() {
             try Task.checkCancellation()
             let stemURL = folder.appendingPathComponent("stem-\(UUID().uuidString).caf")
-            let stem = try renderSingle(plan: plan, project: project, to: stemURL, instances: group, normalize: false) { value in
+            let stem = try renderSingle(plan: plan, project: project, to: stemURL, instances: group.instances, normalize: false) { value in
                 progress(0.8 * (Double(index) + value) / Double(groups.count))
             }
             stems.append(stem)
@@ -48,31 +54,40 @@ public actor OfflineAudioRenderer {
         let frames = stems.map(\.frameCount).max() ?? 0
         guard let format = AVAudioFormat(standardFormatWithSampleRate: rate, channels: 2),
               let mixed = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 4096),
+              let reference = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 4096),
               let input = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 4096),
-              let mixedChannels = mixed.floatChannelData, let inputChannels = input.floatChannelData else {
+              let mixedChannels = mixed.floatChannelData, let referenceChannels = reference.floatChannelData, let inputChannels = input.floatChannelData else {
             throw ScoreError.invalid("无法创建分组混音缓冲。")
         }
         let sources = try stems.map { try AVAudioFile(forReading: $0.url) }
         var file: AVAudioFile? = try AVAudioFile(forWriting: mixedURL, settings: format.settings)
         var position: Int64 = 0
         var peak: Float = 0
+        var referencePeak: Float = 0
         while position < frames {
             try Task.checkCancellation()
             let count = AVAudioFrameCount(min(4096, frames - position))
             mixed.frameLength = count
-            for channel in 0..<2 { mixedChannels[channel].initialize(repeating: 0, count: Int(count)) }
-            for source in sources {
+            reference.frameLength = count
+            for channel in 0..<2 {
+                mixedChannels[channel].initialize(repeating: 0, count: Int(count))
+                referenceChannels[channel].initialize(repeating: 0, count: Int(count))
+            }
+            for (source, group) in zip(sources, groups) {
                 let available = min(Int64(count), source.length - source.framePosition)
                 guard available > 0 else { continue }
                 try source.read(into: input, frameCount: AVAudioFrameCount(available))
                 guard Int64(input.frameLength) == available else { throw ScoreError.invalid("分组音频缓存提前结束。") }
+                var volume = group.volume
                 for channel in 0..<2 {
-                    vDSP_vadd(mixedChannels[channel], 1, inputChannels[channel], 1, mixedChannels[channel], 1, vDSP_Length(input.frameLength))
+                    vDSP_vadd(referenceChannels[channel], 1, inputChannels[channel], 1, referenceChannels[channel], 1, vDSP_Length(input.frameLength))
+                    vDSP_vsma(inputChannels[channel], 1, &volume, mixedChannels[channel], 1, mixedChannels[channel], 1, vDSP_Length(input.frameLength))
                 }
             }
             for channel in 0..<2 {
                 var value: Float = 0
                 vDSP_maxmgv(mixedChannels[channel], 1, &value, vDSP_Length(count)); peak = max(peak, value)
+                vDSP_maxmgv(referenceChannels[channel], 1, &value, vDSP_Length(count)); referencePeak = max(referencePeak, value)
             }
             try file?.write(from: mixed)
             position += Int64(count)
@@ -81,7 +96,7 @@ public actor OfflineAudioRenderer {
         file = nil
         let source = try AVAudioFile(forReading: mixedURL)
         let destination = try AVAudioFile(forWriting: url, settings: format.settings)
-        var gain: Float = min(1, 0.89125 / max(0.00001, peak))
+        var gain = outputGain(peak: peak, referencePeak: referencePeak, masterVolume: project.settings.performance.masterVolume ?? 1)
         position = 0
         while position < frames {
             try Task.checkCancellation()
@@ -225,7 +240,7 @@ public actor OfflineAudioRenderer {
         file = nil // Close and finalize the CAF header before the second pass.
         let source = try AVAudioFile(forReading: rawURL)
         let destination = try AVAudioFile(forWriting: url, settings: format.settings)
-        let gain: Float = normalize ? min(1, 0.89125 / max(0.00001, globalPeak)) : 1
+        let gain: Float = normalize ? outputGain(peak: globalPeak, referencePeak: globalPeak, masterVolume: project.settings.performance.masterVolume ?? 1) : 1
         var written: Int64 = 0
         while written < position {
             try Task.checkCancellation()
@@ -254,5 +269,12 @@ public actor OfflineAudioRenderer {
         progress(1)
         completed = true
         return RenderedAudio(url: url, frameCount: position, sampleRate: rate)
+    }
+
+    private func outputGain(peak: Float, referencePeak: Float, masterVolume: Double) -> Float {
+        let ceiling: Float = 0.89125 // -1 dBFS, leaving encoding headroom.
+        let maximumBoost: Float = 15.848932 // +24 dB for very quiet instruments.
+        let calibration = min(maximumBoost, ceiling / max(0.00001, referencePeak))
+        return min(calibration, ceiling / max(0.00001, peak)) * Float(masterVolume)
     }
 }

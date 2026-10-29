@@ -27,6 +27,8 @@ public enum PerformanceCompiler {
         var notes: [PlaybackNote] = []
         var anchors: [NoteAnchorEvent] = []
         var controls: [PlaybackControl] = []
+        var voiceVolumes: [String: [String: Double]] = [:]
+        for item in project.settings.performance.voiceVolumes ?? [] { voiceVolumes[item.partId, default: [:]][item.voiceId] = item.volume }
         var pending: [String: (index: Int, lastAnchor: String, shift: Double)] = [:]
         var tiePairs: [(String, String)] = []
         var oldEpoch = -1
@@ -67,7 +69,7 @@ public enum PerformanceCompiler {
                             let velocityShift = Int(((random(seedKey + "v", seed: humanize.seed) * 2 - 1) * Double(humanize.velocityJitter)).rounded())
                             let velocity = max(1, min(127, note.velocity + (note.accented ? 10 : 0) + velocityShift))
                             let instance = "\(part.id)|\(note.voice)|\(note.staff)|\(instrument.id)"
-                            notes.append(PlaybackNote(id: id, sourceIDs: [note.id], partID: part.id, voice: note.voice, staff: note.staff, pitch: pitch, velocity: velocity, instrument: instrument, instanceID: instance, start: on, end: gate))
+                            notes.append(PlaybackNote(id: id, sourceIDs: [note.id], partID: part.id, voice: note.voice, staff: note.staff, pitch: pitch, velocity: velocity, volume: voiceVolumes[part.id]?[note.voice] ?? 1, instrument: instrument, instanceID: instance, start: on, end: gate))
                             soundID = id
                             if note.tieStart {
                                 guard pending[key] == nil else { throw ScoreError.unsupported("同一声部存在重叠的同音延音，配对不明确。") }

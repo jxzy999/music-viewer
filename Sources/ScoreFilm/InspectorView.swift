@@ -9,6 +9,12 @@ struct InspectorView: View {
     private var selectedPart: ScorePart? { session.project?.score.parts.first { $0.id == session.selectedPart } }
     var body: some View {
         Form {
+            Section("整体音量") {
+                VolumeControl("总音量", volume: settings?.performance.masterVolume ?? 1, maximum: 1) { volume in
+                    session.edit(preservingPlayback: true) { $0.performance.masterVolume = volume == 1 ? nil : volume }
+                }
+                Text("自动提升偏小的整曲音量，保留乐谱的强弱变化。").font(.caption).foregroundStyle(.secondary)
+            }
             Section("画面") {
                 Picker("风格", selection: setting(\.visual.preset, fallback: "cinematic-paper")) { Text("电影纸面").tag("cinematic-paper"); Text("清晰跟谱").tag("clear-score") }
                 Picker("运镜", selection: setting(\.camera.preset, fallback: "cinematicFollow")) { Text("电影跟随").tag("cinematicFollow"); Text("正面跟谱").tag("flatFollow"); Text("锁定全页").tag("locked") }
@@ -60,8 +66,17 @@ struct InspectorView: View {
                                 }
                             }
                         })) { Text("跟随乐器").tag("inherit"); ForEach(project.settings.instruments) { Text($0.displayName).tag($0.id) } }
+                        VolumeControl("声部 \(voice) 音量", volume: voiceVolume(part: part.id, voice: voice), maximum: 4) { volume in
+                            session.edit(preservingPlayback: true) { config in
+                                var values = config.performance.voiceVolumes ?? []
+                                values.removeAll { $0.partId == part.id && $0.voiceId == voice }
+                                if volume != 1 { values.append(VoiceVolume(partId: part.id, voiceId: voice, volume: volume)) }
+                                config.performance.voiceVolumes = values.isEmpty ? nil : values
+                            }
+                        }
                         ColorPicker("声部 \(voice) 光点", selection: voiceColor(part: part.id, voice: voice), supportsOpacity: false)
                     }
+                    Text("声部音量独立调整：0% 静音，100% 为原始比例，最高 400%。").font(.caption).foregroundStyle(.secondary)
                     Button("编辑段落配器…") { routesOpen = true }
                 }
             }
@@ -98,6 +113,9 @@ struct InspectorView: View {
         Binding(get: { settings?[keyPath: key]?.contains(part) ?? false }, set: { flag in session.edit { value in
             var list = value[keyPath: key] ?? []; list.removeAll { $0 == part }; if flag { list.append(part) }; value[keyPath: key] = list
         } })
+    }
+    private func voiceVolume(part: String, voice: String) -> Double {
+        settings?.performance.voiceVolumes?.first { $0.partId == part && $0.voiceId == voice }?.volume ?? 1
     }
     private func voiceColor(part: String, voice: String) -> Binding<Color> {
         Binding(get: {

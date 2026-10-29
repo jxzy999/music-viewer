@@ -111,6 +111,14 @@ public struct ProjectFile: Sendable {
         }
         let parts = Set(score.parts.map(\.id)); let instruments = Set(settings.instruments.map(\.id))
         guard (settings.performance.mutedPartIds ?? []).allSatisfy(parts.contains), (settings.performance.soloPartIds ?? []).allSatisfy(parts.contains) else { throw ScoreError.invalid("静音或独奏的声部不存在。") }
+        guard (0...1).contains(settings.performance.masterVolume ?? 1) else { throw ScoreError.invalid("总音量需要在 0%–100% 之间。") }
+        var volumeKeys: Set<String> = []
+        for item in settings.performance.voiceVolumes ?? [] {
+            guard let part = score.parts.first(where: { $0.id == item.partId }), part.voices.contains(item.voiceId),
+                  (0...4).contains(item.volume), volumeKeys.insert("\(item.partId.count):\(item.partId)\(item.voiceId)").inserted else {
+                throw ScoreError.invalid("声部音量引用不存在、重复或超出 0%–400% 范围。")
+            }
+        }
         for (part, instrument) in settings.partInstruments where !parts.contains(part) || !instruments.contains(instrument) { throw ScoreError.invalid("配器引用不存在：\(part)") }
         for route in settings.routes where !parts.contains(route.selector.partId) || !instruments.contains(route.instrumentId) { throw ScoreError.invalid("段落配器引用不存在：\(route.id)") }
         guard settings.camera.focusPartIds.allSatisfy(parts.contains), Set(settings.routes.map(\.id)).count == settings.routes.count else { throw ScoreError.invalid("关注声部不存在或配器段落 ID 重复。") }
@@ -153,7 +161,7 @@ public struct ProjectFile: Sendable {
             var result = a
             let optional: [String]
             switch path.last {
-            case "performance": optional = ["tempoOverrides", "mutedPartIds", "soloPartIds", "reverbWetDryMix"]
+            case "performance": optional = ["tempoOverrides", "mutedPartIds", "soloPartIds", "reverbWetDryMix", "masterVolume", "voiceVolumes"]
             case "visual": optional = ["noteOverrides"]
             case "selector": optional = ["voiceId", "staff"]
             case "bank": optional = ["key", "path", "sha256", "attribution", "licensePath"]
@@ -168,6 +176,9 @@ public struct ProjectFile: Sendable {
                 let match: [String: Any]?
                 if let id = item["id"] as? String { match = a.first { $0["id"] as? String == id } }
                 else if let id = item["noteId"] as? String { match = a.first { $0["noteId"] as? String == id } }
+                else if let part = item["partId"] as? String, let voice = item["voiceId"] as? String {
+                    match = a.first { $0["partId"] as? String == part && $0["voiceId"] as? String == voice }
+                }
                 else { match = index < a.count ? a[index] : nil }
                 return Self.merge(match ?? [:], item, path: path + ["*"])
             }
