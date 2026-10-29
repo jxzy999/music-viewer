@@ -205,6 +205,13 @@ final class SceneRegressionTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(transport.position, 0.5)
         XCTAssertLessThan(transport.position, 1)
         transport.stop(); XCTAssertEqual(transport.position, 0)
+        transport.unload()
+        XCTAssertEqual(transport.duration, 0)
+        XCTAssertFalse(transport.isPlaying)
+        try transport.load(RenderedAudio(url: url, frameCount: 144000, sampleRate: 48000))
+        try transport.play()
+        XCTAssertTrue(transport.isPlaying)
+        XCTAssertEqual(transport.duration, 3)
     }
 
     @MainActor

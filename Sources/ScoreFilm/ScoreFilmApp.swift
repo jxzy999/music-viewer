@@ -31,7 +31,7 @@ struct WorkspaceCommands: Commands {
         CommandGroup(replacing: .newItem) {
             Button("新建工作窗口") { openWindow(id: "workspace") }.keyboardShortcut("n").disabled(SessionRegistry.shared.isTerminating)
             Button("打开曲谱或工程…") { session?.openPanel() }.keyboardShortcut("o").disabled(SessionRegistry.shared.isTerminating)
-            Button("打开示例") { session?.openSample() }.disabled(SessionRegistry.shared.isTerminating)
+            Button("返回首页与示例库") { session?.returnHome() }.keyboardShortcut("h", modifiers: [.command,.shift]).disabled(session?.project == nil || SessionRegistry.shared.isTerminating)
         }
         CommandGroup(replacing: .saveItem) {
             Button("保存工程") { session?.save() }.keyboardShortcut("s").disabled(session?.project == nil)

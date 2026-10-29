@@ -19,7 +19,7 @@
 | [技术决策与官方资料](07-decisions-and-references.md) | 选型理由、备选路线、依赖与音源许可、官方链接 |
 | [方案与示例静态校验记录](08-document-validation.md) | 本次实际检查、结果和后续原型验证边界 |
 | [开发与验证记录](09-development-status.md) | 当前应用实现、真实运行与成片证据、尚未关闭的验收 |
-| [第三方资源与复现](10-third-party-resources.md) | 固定排版库、可分发音源、许可、原创语料和复现方式 |
+| [第三方资源与复现](10-third-party-resources.md) | 排版库、音源、示例曲谱来源、MusicXML 下载资源与复现方式 |
 
 格式草案附有 [JSON Schema](Schemas/manifest.schema.json)、[项目设置 Schema](Schemas/project.schema.json) 和 [原创示例说明](Examples/README.md)。示例包含未压缩工程及同内容的 `.scorefilm` 文件，现可由项目应用打开；运行方法见[工程入口](../README.md)。
 

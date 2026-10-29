@@ -1,0 +1,22 @@
+{
+  "format": "scorefilm",
+  "version": "1.0.0",
+  "profile": "scorefilm-mac-v1",
+  "projectId": "2b2eaeb6-f2a5-5774-95ac-8c56ee54fd6c",
+  "title": "致爱丽丝（主题选段）/ Für Elise",
+  "files": {
+    "notation": "score.musicxml",
+    "settings": "project.json"
+  },
+  "requiredCapabilities": [
+    "notation.musicxml4",
+    "routing.segment",
+    "visual.trails.v1",
+    "export.mp4"
+  ],
+  "integrity": {
+    "score.musicxml": "3301843b23fad0b91fa7ed125598901b533adb34b4941e5cc2258178bbde891b",
+    "project.json": "68e422f32e4a61539de717b92f78811eb368edde258ab44f1315ce163533ae94",
+    "Licenses/score.txt": "6be3926f8919bacc75bdbab843f8d02f329b9257cd924cd660295f6f612cf86a"
+  }
+}

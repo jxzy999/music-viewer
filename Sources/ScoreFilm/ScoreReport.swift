@@ -34,6 +34,13 @@ struct CreditsView: View {
                 Text("GeneralUser GS · S. Christian Collins · License 2.0")
                 Button("查看随应用分发的许可") { NSWorkspace.shared.open(MediaResources.root.appendingPathComponent("Licenses")) }
             }
+            Section("示例曲谱") {
+                Text("曲谱来源、署名、改编与许可随应用提供。")
+                Button("查看示例曲谱说明") {
+                    let root = Bundle.module.resourceURL ?? Bundle.module.bundleURL
+                    NSWorkspace.shared.open(root.appendingPathComponent("Resources/Examples/README.md"))
+                }
+            }
         }.formStyle(.grouped).padding()
     }
 }

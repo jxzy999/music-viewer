@@ -1,0 +1,22 @@
+{
+  "format": "scorefilm",
+  "version": "1.0.0",
+  "profile": "scorefilm-mac-v1",
+  "projectId": "bf260456-00e0-5d60-aa65-985119d4baa0",
+  "title": "绿袖子 / Greensleeves",
+  "files": {
+    "notation": "score.musicxml",
+    "settings": "project.json"
+  },
+  "requiredCapabilities": [
+    "notation.musicxml4",
+    "routing.segment",
+    "visual.trails.v1",
+    "export.mp4"
+  ],
+  "integrity": {
+    "score.musicxml": "7a500427a1656b065957fc3e496e2731dc8e96893f29cf37025176a4e6e95385",
+    "project.json": "924fa5cc6c7ca45f53b12dda144734030d4691d1420ee79b957b9cdb852f8727",
+    "Licenses/score.txt": "def49fb51c647486f87af3e8a0e197dc6d4a00d4d636205768d9ca375476f895"
+  }
+}

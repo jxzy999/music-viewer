@@ -26,6 +26,10 @@ final class WorkspaceSession {
     var selectedPart: String?
     var reportOpen = false
     var recoveryURL: URL?
+    private(set) var isBuiltInExample = false
+    private(set) var isLibraryProject = false
+    var libraryProjects: [UserProjectSummary] = []
+    var libraryError: String?
     @ObservationIgnored weak var window: NSWindow?
     @ObservationIgnored var openingURL: URL?
     private(set) var isClosing = false
@@ -42,6 +46,7 @@ final class WorkspaceSession {
     @ObservationIgnored private var layoutKey: String?
     @ObservationIgnored private var audioKey: String?
     @ObservationIgnored private var jobID = UUID()
+    @ObservationIgnored private var projectRevision = UUID()
     @ObservationIgnored private var readAndParseSeconds = 0.0
     @ObservationIgnored private var preparationMetrics: [String: Double] = [:]
     @ObservationIgnored private let cache = FileManager.default.temporaryDirectory.appendingPathComponent("ScoreFilm-\(UUID().uuidString)", isDirectory: true)
@@ -51,7 +56,57 @@ final class WorkspaceSession {
     }
 
     var title: String { project?.score.title ?? "Music Viewer" }
+    private var suggestedFileName: String {
+        let value = title.components(separatedBy: CharacterSet(charactersIn: "/:\\").union(.controlCharacters))
+            .filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }.joined(separator: " - ")
+        return value.isEmpty ? "Music Viewer" : String(value.prefix(80))
+    }
     var ready: Bool { scene != nil && audio != nil && !isBusy && !needsPreparation && !isClosing }
+    var documentSubtitle: String {
+        if isBuiltInExample { return "内置示例 · 修改设置后自动创建副本" }
+        if isLibraryProject { return dirty ? "我的工程 · 正在自动保存…" : "我的工程 · 已自动保存" }
+        return dirty ? "尚未保存 · 已启用恢复副本" : (savedURL?.lastPathComponent ?? "乐谱演奏与可视化")
+    }
+
+    func refreshLibrary() async {
+        do { libraryProjects = try await UserLibrary.store.projects(); libraryError = nil }
+        catch { libraryError = "无法读取我的工程：\(error.localizedDescription)" }
+        recoveryURL = RecoveryStore.latest()
+    }
+
+    func openExample(_ example: ExampleScore) {
+        open((Bundle.module.resourceURL ?? Bundle.module.bundleURL).appendingPathComponent("Resources/Examples/\(example.filename)"), example: true)
+    }
+
+    func returnHome() {
+        guard !isClosing, project != nil else { return }
+        let snapshot = dirty ? project : nil
+        let managed = isLibraryProject
+        let workspaceID = recoveryWorkspaceID
+        cancel(); transport.stop()
+        let autosave = autosaveJob; autosave?.cancel(); autosaveJob = nil
+        let pending = cancelledJobs; cancelledJobs.removeAll()
+        let id = UUID(); jobID = id; isBusy = true; status = "正在保存并返回首页…"
+        job = Task { [self] in
+            do {
+                for task in pending { await task.value }
+                await autosave?.value
+                if let snapshot { _ = try await Self.persist(snapshot, managed: managed, workspaceID: workspaceID) }
+                try Task.checkCancellation(); guard id == jobID, !isClosing else { return }
+                transport.unload()
+                try? FileManager.default.removeItem(at: cache)
+                projectRevision = UUID()
+                project = nil; scene = nil; plan = nil; layout = nil; audio = nil
+                savedURL = nil; selectedPart = nil; openingURL = nil; recoverySourceURL = nil
+                reportOpen = false
+                isBuiltInExample = false; isLibraryProject = false
+                layoutKey = nil; audioKey = nil; exportResult = nil
+                dirty = false; needsPreparation = true; isBusy = false; progress = 0; error = nil
+                status = "选择一首示例，或打开你的曲谱"
+                await refreshLibrary()
+            } catch { finishError(error, id: id) }
+        }
+    }
 
     func openPanel() {
         let panel = NSOpenPanel()
@@ -80,6 +135,7 @@ final class WorkspaceSession {
         }
         openingURL = !example && !recovered ? url : nil
         let previous = dirty ? project : nil
+        let previousManaged = isLibraryProject
         let recoveryWorkspaceID = self.recoveryWorkspaceID
         cancel(); transport.stop()
         let id = UUID(); jobID = id; isBusy = true; error = nil; progress = 0
@@ -87,10 +143,8 @@ final class WorkspaceSession {
         job = Task {
             do {
                 let readBegan = ProcessInfo.processInfo.systemUptime
-                let loaded = try await Task.detached(priority: .userInitiated) {
-                    if let previous { try RecoveryStore.save(previous, workspaceID: recoveryWorkspaceID) }
-                    return try ProjectFile.load(url)
-                }.value
+                if let previous { _ = try await Self.persist(previous, managed: previousManaged, workspaceID: recoveryWorkspaceID) }
+                let loaded = try await Task.detached(priority: .userInitiated) { try ProjectFile.load(url) }.value
                 guard id == jobID else { return }
                 readAndParseSeconds = ProcessInfo.processInfo.systemUptime - readBegan
                 var configured = loaded
@@ -98,13 +152,16 @@ final class WorkspaceSession {
                 if let i = args.firstIndex(of: "--fps"), args.indices.contains(i + 1), let fps = Int(args[i + 1]), [30,60].contains(fps) { configured.settings.export.fps.n = fps }
                 if let i = args.firstIndex(of: "--preset"), args.indices.contains(i + 1), ["clear-score","cinematic-paper"].contains(args[i + 1]) { configured.settings.visual.preset = args[i + 1] }
                 project = configured; selectedPart = loaded.score.parts.first?.id
+                projectRevision = UUID()
+                isBuiltInExample = example
+                isLibraryProject = !example && UserLibrary.contains(url)
                 savedURL = !example && !recovered && url.pathExtension.lowercased() == "scorefilm" ? url : nil
                 openingURL = nil
                 recoverySourceURL = recovered ? url : nil
-                dirty = example || recovered || savedURL == nil
+                dirty = !example && (recovered || savedURL == nil)
                 scene = nil; plan = nil; layout = nil; audio = nil; layoutKey = nil; audioKey = nil
                 isBusy = false
-                scheduleAutosave()
+                if dirty { scheduleAutosave() }
                 prepare()
             } catch { finishError(error, id: id) }
         }
@@ -185,10 +242,16 @@ final class WorkspaceSession {
         guard !isBusy, var value = project else { return }
         let previous = value.settings
         mutation(&value.settings)
+        let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys]
+        guard (try? encoder.encode(previous)) != (try? encoder.encode(value.settings)) else { return }
+        if isBuiltInExample {
+            value = value.userCopy()
+            isBuiltInExample = false; isLibraryProject = true; savedURL = nil
+        }
+        projectRevision = UUID()
         var comparable = previous
         comparable.visual = value.settings.visual; comparable.camera = value.settings.camera
         comparable.export.width = value.settings.export.width; comparable.export.height = value.settings.export.height
-        let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys]
         let visualOnly = ready && (try? encoder.encode(comparable)) == (try? encoder.encode(value.settings))
         project = value; dirty = true
         scheduleAutosave()
@@ -230,10 +293,11 @@ final class WorkspaceSession {
     }
 
     func save(asNew: Bool = false) {
-        guard !isClosing, let project else { return }
+        guard !isClosing, let current = project else { return }
+        let project = isBuiltInExample ? current.userCopy() : current
         if let savedURL, !asNew { write(project, to: savedURL); return }
         let panel = NSSavePanel()
-        panel.title = "保存演奏工程"; panel.nameFieldStringValue = title + ".scorefilm"
+        panel.title = "保存演奏工程"; panel.nameFieldStringValue = suggestedFileName + ".scorefilm"
         panel.allowedContentTypes = [UTType(filenameExtension: "scorefilm") ?? .data]
         panel.begin { [weak self] response in
             guard response == .OK, let url = panel.url else { return }
@@ -243,8 +307,24 @@ final class WorkspaceSession {
 
     private func write(_ value: ProjectFile, to url: URL) {
         guard SessionRegistry.shared.owner(of: url, excluding: self) == nil else { error = "此文件已在另一个窗口打开，请切换到该窗口保存，或选择其他文件名。"; return }
+        if UserLibrary.contains(url) {
+            let previous = autosaveJob; previous?.cancel()
+            let revision = projectRevision
+            autosaveJob = Task {
+                await previous?.value
+                do {
+                    let saved = try await UserLibrary.store.save(value)
+                    guard !Task.isCancelled, projectRevision == revision else { return }
+                    savedURL = saved; project?.sourceURL = saved; dirty = false
+                    status = "我的工程已保存"
+                } catch is CancellationError {} catch { self.error = error.localizedDescription }
+            }
+            return
+        }
         do {
             try value.save(to: url); autosaveJob?.cancel(); savedURL = url; dirty = false; status = "已保存 · \(url.lastPathComponent)"
+            var saved = value; saved.sourceURL = url; project = saved
+            isBuiltInExample = false; isLibraryProject = UserLibrary.contains(url); projectRevision = UUID()
             RecoveryStore.remove(value.id, workspaceID: recoveryWorkspaceID)
             if let recoverySourceURL { RecoveryStore.removeRecovery(at: recoverySourceURL); self.recoverySourceURL = nil }
         }
@@ -255,7 +335,7 @@ final class WorkspaceSession {
         guard ready else { return }
         transport.pause()
         let panel = NSSavePanel(); panel.title = "导出演奏影片"
-        panel.nameFieldStringValue = title + ".mp4"; panel.allowedContentTypes = [.mpeg4Movie]
+        panel.nameFieldStringValue = suggestedFileName + ".mp4"; panel.allowedContentTypes = [.mpeg4Movie]
         panel.begin { [weak self] response in
             guard response == .OK, let url = panel.url else { return }
             self?.export(to: url)
@@ -315,13 +395,26 @@ final class WorkspaceSession {
         autosaveJob?.cancel()
         guard let snapshot = project, dirty else { return }
         let workspaceID = recoveryWorkspaceID
+        let managed = isLibraryProject
+        let revision = projectRevision
         autosaveJob = Task {
             do {
                 try await Task.sleep(for: .milliseconds(700))
-                let worker = Task.detached(priority: .utility) { try RecoveryStore.save(snapshot, workspaceID: workspaceID) }
-                try await withTaskCancellationHandler { try await worker.value } onCancel: { worker.cancel() }
-            } catch is CancellationError {} catch { status = "恢复副本保存失败：\(error.localizedDescription)" }
+                let url = try await Self.persist(snapshot, managed: managed, workspaceID: workspaceID)
+                guard !Task.isCancelled, projectRevision == revision, project?.id == snapshot.id else { return }
+                if let url { savedURL = url; project?.sourceURL = url; dirty = false }
+            } catch is CancellationError {} catch {
+                guard projectRevision == revision else { return }
+                self.error = "自动保存失败：\(error.localizedDescription)"
+            }
         }
+    }
+
+    private static func persist(_ project: ProjectFile, managed: Bool, workspaceID: UUID) async throws -> URL? {
+        if managed { return try await UserLibrary.store.save(project) }
+        let worker = Task.detached(priority: .utility) { try RecoveryStore.save(project, workspaceID: workspaceID) }
+        try await withTaskCancellationHandler { try await worker.value } onCancel: { worker.cancel() }
+        return nil
     }
 
     private var validationFolder: URL? {
@@ -370,7 +463,7 @@ final class WorkspaceSession {
             await autosave?.value
             if dirty, let snapshot = project {
                 let workspaceID = recoveryWorkspaceID
-                try await Task.detached(priority: .utility) { try RecoveryStore.save(snapshot, workspaceID: workspaceID) }.value
+                _ = try await Self.persist(snapshot, managed: isLibraryProject, workspaceID: workspaceID)
             }
         }
         closingTask = work

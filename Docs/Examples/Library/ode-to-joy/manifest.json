@@ -1,0 +1,22 @@
+{
+  "format": "scorefilm",
+  "version": "1.0.0",
+  "profile": "scorefilm-mac-v1",
+  "projectId": "3ed4bd40-7a5c-5ecf-bc5f-6d2a9bf32ffa",
+  "title": "欢乐颂 / Ode to Joy",
+  "files": {
+    "notation": "score.musicxml",
+    "settings": "project.json"
+  },
+  "requiredCapabilities": [
+    "notation.musicxml4",
+    "routing.segment",
+    "visual.trails.v1",
+    "export.mp4"
+  ],
+  "integrity": {
+    "score.musicxml": "57bdd31fcb82421157cf554fae094e5fc290c3cbb9a5f2845a9c347eb125f09f",
+    "project.json": "953956b55b8d6ce65baa33aad40796c6d5384243f832f779bad3b1676097ceae",
+    "Licenses/score.txt": "e1379c626544c96ca8e0d21c683410635c18d3b885f33fe0d7fceffa1a8e2dff"
+  }
+}

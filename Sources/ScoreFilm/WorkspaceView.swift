@@ -22,12 +22,15 @@ struct WorkspaceView: View {
         }
         .frame(minWidth: 1020, minHeight: 680)
         .navigationTitle(session.title)
-        .navigationSubtitle(session.dirty ? "尚未保存 · 已启用恢复副本" : (session.savedURL?.lastPathComponent ?? "乐谱演奏与可视化"))
+        .navigationSubtitle(session.documentSubtitle)
         .focusedSceneValue(\.workspace, session)
         .background(WorkspaceWindowBridge(session: session).frame(width: 0, height: 0))
         .disabled(session.isClosing)
         .toolbar {
             ToolbarItemGroup(placement: .navigation) {
+                if session.project != nil {
+                    Button { session.returnHome() } label: { Label("返回首页", systemImage: "house") }.help("返回首页并保留你的工程")
+                }
                 Button { session.openPanel() } label: { Label("打开", systemImage: "folder") }.help("打开 MusicXML、MXL 或 Music Viewer 工程")
                 Button { session.save() } label: { Label("保存", systemImage: "square.and.arrow.down") }.disabled(session.project == nil)
             }
@@ -44,6 +47,7 @@ struct WorkspaceView: View {
         .sheet(isPresented: $session.reportOpen) { ScoreReport(session: session) }
         .onOpenURL { SessionRegistry.shared.openExternal([$0]) }
         .onChange(of: session.transport.deviceChangeCount) { _, _ in session.status = "声音设备已变化，演奏已暂停；可以继续播放" }
+        .onChange(of: session.project == nil) { _, home in if home { routesOpen = false; session.reportOpen = false } }
         .task {
             guard !began else { return }; began = true
             let launchWindow = openWindow
@@ -68,7 +72,7 @@ struct WorkspaceView: View {
                         if !project.score.composer.isEmpty { Text(project.score.composer).font(.caption).foregroundStyle(.secondary) }
                         Text("\(project.score.parts.first?.measures.count ?? 0) 小节 · \(project.score.noteCount) 音符").font(.caption).foregroundStyle(.secondary)
                     }.padding(.vertical, 8)
-                } else { Text("尚未导入曲谱").foregroundStyle(.secondary) }
+            } else { Label("首页 · 示例与我的工程", systemImage: "house").foregroundStyle(.secondary) }
             }
             if let project = session.project {
                 Section("演奏声部") {
@@ -99,6 +103,8 @@ struct WorkspaceView: View {
             if let scene = session.scene {
                 ScorePreview(scene: scene, transport: session.transport) { session.error = $0 }
                     .aspectRatio(CGFloat(scene.settings.export.width) / CGFloat(scene.settings.export.height), contentMode: .fit).id(session.sceneVersion)
+            } else if session.project == nil {
+                HomeView(session: session)
             } else {
                 VStack(spacing: 20) {
                     Image(systemName: "music.note.list").font(.system(size: 52, weight: .light)).foregroundStyle(.teal)
@@ -107,14 +113,7 @@ struct WorkspaceView: View {
                         Text("导入曲谱，选择乐器与画面风格，播放并导出带声音的影片。")
                             .font(.callout).foregroundStyle(.secondary).multilineTextAlignment(.center).frame(maxWidth: 340)
                     }
-                    if session.project == nil {
-                        HStack {
-                            Button("导入曲谱…") { session.openPanel() }.buttonStyle(.borderedProminent)
-                            Button("打开示例") { session.openSample() }
-                        }
-                        if session.recoveryURL != nil { Button("恢复上次未保存的工程") { session.restoreRecovery() }.buttonStyle(.link) }
-                        Text("支持 MusicXML · MXL · .scorefilm 工程").font(.caption).foregroundStyle(.tertiary)
-                    } else if !session.isBusy { Button("重新准备") { session.prepare() } }
+                    if !session.isBusy { Button("重新准备") { session.prepare() } }
                 }.padding(36)
             }
             if session.isBusy {

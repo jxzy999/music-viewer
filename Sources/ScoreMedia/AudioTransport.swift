@@ -96,8 +96,12 @@ public final class AudioTransport {
         timer?.invalidate(); timer = nil
     }
 
-    public func shutdown() {
+    public func unload() {
         stop(); engine.stop(); file = nil; duration = 0
+    }
+
+    public func shutdown() {
+        unload()
         if let deviceObserver { NotificationCenter.default.removeObserver(deviceObserver) }
         deviceObserver = nil
     }

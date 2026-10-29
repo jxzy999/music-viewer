@@ -16,10 +16,14 @@
 
 ## 使用
 
-1. 打开应用，选择“打开示例”，或导入 `.musicxml`、`.xml`、`.mxl`、`.scorefilm`。
+1. 在首页选择内置示例，或导入 `.musicxml`、`.xml`、`.mxl`、`.scorefilm`。
 2. 选择声部，在右侧指定钢琴或小提琴；“编辑段落配器”可设置小节与有理拍值范围。
 3. 选择电影纸面或清晰跟谱、轨迹和运镜选项，等待准备完成后播放或定位。
 4. 保存为 `.scorefilm` 工程，或导出带 AAC 音轨的 1080p、30／60 fps MP4。
+
+制作页左上角的房子按钮可「返回首页」，快捷键为 ⌘⇧H。内置示例首次修改设置时自动创建独立工程，并保存到 `~/Library/Application Support/Music Viewer/Projects/`；回到首页可在「我的工程」继续打开。再次打开内置示例仍使用原始设置。外部未保存工程返回首页时保留恢复副本。
+
+示例库提供《致爱丽丝》主题选段（钢琴独奏）、巴赫《加沃特回旋曲》主题选段（小提琴独奏），以及《欢乐颂》《绿袖子》《奇异恩典》（小提琴与钢琴合奏）。来源与改编说明见[示例曲谱说明](Sources/ScoreFilm/Resources/Examples/README.md)。
 
 轨迹仅来自显式 slur 连奏组或 tie 延音链。普通相邻音、音源尾音和 MIDI 重叠不会生成连线。尚未验证的演奏特性会明确阻止生成不完整成片；原始 MusicXML 随工程保存。
 
@@ -32,6 +36,7 @@ swift test
 python3 script/make_validation_fixtures.py
 python3 script/make_validation_fixtures.py --stress
 python3 script/make_validation_fixtures.py --features
+python3 script/build_example_library.py
 ```
 
 开发构建可通过 `--sample --fps 60 --validate /绝对路径/验收目录` 生成原生排版、帧一致性、运镜与导出记录；请先退出已有实例，再用 `open -n "dist/Music Viewer.app" --args …` 启动。验收目录须为新的目录。`python3 script/verify_movie.py /绝对路径/验收目录` 完整解码成片并检查音视频元数据与帧时间；该开发工具使用 ffmpeg／ffprobe，应用运行不需要它们。

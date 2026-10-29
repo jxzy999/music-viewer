@@ -1,0 +1,22 @@
+{
+  "format": "scorefilm",
+  "version": "1.0.0",
+  "profile": "scorefilm-mac-v1",
+  "projectId": "12557f35-53dd-545f-a46e-0e51546d4c5d",
+  "title": "奇异恩典 / Amazing Grace",
+  "files": {
+    "notation": "score.musicxml",
+    "settings": "project.json"
+  },
+  "requiredCapabilities": [
+    "notation.musicxml4",
+    "routing.segment",
+    "visual.trails.v1",
+    "export.mp4"
+  ],
+  "integrity": {
+    "score.musicxml": "ce34e864f5835f9a3f7dd16f015cfaeab36991837851ee00091505c950a5fb9d",
+    "project.json": "4f35f52b4fd2bd0ac5a49e79a9cbf9c01b58f3da5db546b34ad39891750b97cf",
+    "Licenses/score.txt": "4e8c8f73cf7eef500e1a307cd51dfb32bcd8b8a4ec5a9fd9a1e263a62b952cbe"
+  }
+}

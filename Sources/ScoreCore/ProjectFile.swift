@@ -15,6 +15,14 @@ public struct ProjectFile: Sendable {
     private let originalSettings: Data?
     private let originalManifest: Data?
 
+    /// A user copy keeps score identities and extensions, but owns a new
+    /// project identity and never points back to a bundled template file.
+    public func userCopy() -> Self {
+        Self(id: UUID(), score: score, settings: settings, sourceURL: nil, entries: entries,
+             notationPath: notationPath, settingsPath: settingsPath,
+             originalSettings: originalSettings, originalManifest: originalManifest)
+    }
+
     public static func load(_ url: URL) throws -> Self {
         let bytes = try Data(contentsOf: url, options: .mappedIfSafe)
         let ext = url.pathExtension.lowercased()
