@@ -1,0 +1,239 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ScoreFilm project settings version 1 draft",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "scoreAxis", "performance", "instruments", "partInstruments", "routes", "layout", "visual", "camera", "export"],
+  "properties": {
+    "version": { "const": "1.0.0" },
+    "scoreAxis": {
+      "type": "object", "additionalProperties": false,
+      "required": ["referencePartId"],
+      "properties": { "referencePartId": { "$ref": "#/$defs/id" } }
+    },
+    "performance": {
+      "type": "object", "additionalProperties": false,
+      "required": ["defaultTempoQPM", "tempoScale", "fermataMultiplier", "humanize"],
+      "properties": {
+        "defaultTempoQPM": { "type": "number", "exclusiveMinimum": 0, "maximum": 1000 },
+        "tempoScale": { "type": "number", "minimum": 0.1, "maximum": 4 },
+        "fermataMultiplier": { "type": "number", "minimum": 1, "maximum": 10 },
+        "reverbWetDryMix": { "type": "number", "minimum": 0, "maximum": 100, "default": 12 },
+        "mutedPartIds": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/id" } },
+        "soloPartIds": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/id" } },
+        "humanize": {
+          "type": "object", "additionalProperties": false,
+          "required": ["seed", "timingJitterMS", "velocityJitter"],
+          "properties": {
+            "seed": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
+            "timingJitterMS": { "type": "number", "minimum": 0, "maximum": 50 },
+            "velocityJitter": { "type": "integer", "minimum": 0, "maximum": 20 }
+          }
+        },
+        "tempoOverrides": {
+          "type": "array",
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["position", "qpm", "interpolation"],
+            "properties": {
+              "position": { "$ref": "#/$defs/position" },
+              "qpm": { "type": "number", "exclusiveMinimum": 0, "maximum": 1000 },
+              "interpolation": { "enum": ["step", "linearQPM"] }
+            }
+          }
+        }
+      }
+    },
+    "instruments": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "displayName", "bank", "program", "bankMSB", "bankLSB", "gainDB", "pan"],
+        "properties": {
+          "id": { "$ref": "#/$defs/id" },
+          "displayName": { "type": "string", "minLength": 1 },
+          "bank": {
+            "oneOf": [
+              {
+                "type": "object", "additionalProperties": false,
+                "required": ["kind", "key"],
+                "properties": { "kind": { "const": "builtin" }, "key": { "$ref": "#/$defs/id" } }
+              },
+              {
+                "type": "object", "additionalProperties": false,
+                "required": ["kind", "path", "sha256", "attribution", "licensePath"],
+                "properties": {
+                  "kind": { "const": "embedded" },
+                  "path": { "$ref": "#/$defs/path" },
+                  "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+                  "attribution": { "type": "string", "minLength": 1 },
+                  "licensePath": { "$ref": "#/$defs/path" }
+                }
+              }
+            ]
+          },
+          "program": { "type": "integer", "minimum": 0, "maximum": 127 },
+          "bankMSB": { "type": "integer", "minimum": 0, "maximum": 127 },
+          "bankLSB": { "type": "integer", "minimum": 0, "maximum": 127 },
+          "gainDB": { "type": "number", "minimum": -96, "maximum": 12 },
+          "pan": { "type": "number", "minimum": -1, "maximum": 1 }
+        }
+      }
+    },
+    "partInstruments": {
+      "type": "object", "additionalProperties": { "$ref": "#/$defs/id" }
+    },
+    "routes": {
+      "type": "array",
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "selector", "range", "instrumentId", "priority"],
+        "properties": {
+          "id": { "$ref": "#/$defs/id" },
+          "selector": { "$ref": "#/$defs/selector" },
+          "range": { "$ref": "#/$defs/range" },
+          "instrumentId": { "$ref": "#/$defs/id" },
+          "priority": { "type": "integer", "minimum": 0, "maximum": 1000 }
+        }
+      }
+    },
+    "layout": {
+      "type": "object", "additionalProperties": false,
+      "required": ["paper", "orientation", "staffScale", "preserveSourceBreaks"],
+      "properties": {
+        "paper": { "enum": ["a4", "letter"] },
+        "orientation": { "enum": ["portrait", "landscape"] },
+        "staffScale": { "type": "number", "minimum": 0.5, "maximum": 2 },
+        "preserveSourceBreaks": { "type": "boolean" }
+      }
+    },
+    "visual": {
+      "type": "object", "additionalProperties": false,
+      "required": ["preset", "voiceColors", "effects"],
+      "properties": {
+        "preset": { "enum": ["clear-score", "cinematic-paper"] },
+        "voiceColors": {
+          "type": "array",
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["selector", "color"],
+            "properties": {
+              "selector": { "$ref": "#/$defs/selector" },
+              "color": { "type": "string", "pattern": "^#[0-9A-Fa-f]{8}$" }
+            }
+          }
+        },
+        "effects": {
+          "type": "object", "additionalProperties": false,
+          "required": ["trailMode", "trailHistoryMS", "maxTrailLanes", "sustainMode", "repeatNoteMode"],
+          "properties": {
+            "trailMode": {
+              "enum": ["off", "auto", "travel"],
+              "description": "off 关闭连奏和延音的发光连接；auto 与 travel 均只显示同一次有效 slur 或 tie 内部的合格连接，不能给普通相邻音符补线。全局 off 优先于逐音符覆盖。"
+            },
+            "trailHistoryMS": {
+              "type": "number", "minimum": 0, "maximum": 1000,
+              "description": "仅控制 slur 连奏短拖尾的历史长度；tie 持音线按对应延音演奏区间显现、保持和衰减，不按此值裁短。"
+            },
+            "maxTrailLanes": {
+              "type": "integer", "minimum": 1, "maximum": 16,
+              "description": "限制合格连接的同时显示数，不改变声音或 tie 的原谱音符配对。"
+            },
+            "sustainMode": {
+              "enum": ["none", "pulse"],
+              "description": "控制符头持续高光；普通长音或尾音不能因此单独生成发光连接。"
+            },
+            "repeatNoteMode": {
+              "enum": ["pulse", "loop"],
+              "description": "loop 只适用于已具备 slur 资格且纸面位置重合的连接；无连接关系的重复音仍用脉冲，不生成回环线。"
+            }
+          }
+        },
+        "noteOverrides": {
+          "type": "array",
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["noteId", "trail"],
+            "properties": {
+              "noteId": { "$ref": "#/$defs/id" },
+              "trail": {
+                "enum": ["off", "auto", "travel"],
+                "description": "控制从该音符出发的合格连接。auto 或 travel 不能绕过 slur 或 tie 资格，也不能覆盖全局 off；无音乐关系时仅显示光点。"
+              }
+            }
+          }
+        }
+      }
+    },
+    "camera": {
+      "type": "object", "additionalProperties": false,
+      "required": ["preset", "focusPartIds", "lookAheadSeconds", "motionIntensity"],
+      "properties": {
+        "preset": { "enum": ["flatFollow", "cinematicFollow", "locked"] },
+        "focusPartIds": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/id" } },
+        "lookAheadSeconds": { "type": "number", "minimum": 0, "maximum": 5 },
+        "motionIntensity": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "export": {
+      "type": "object", "additionalProperties": false,
+      "required": ["width", "height", "fps", "container", "videoCodec", "audioSampleRate", "audioChannels", "tailSeconds", "colorSpace"],
+      "properties": {
+        "width": { "type": "integer", "minimum": 320, "maximum": 7680, "multipleOf": 2 },
+        "height": { "type": "integer", "minimum": 320, "maximum": 7680, "multipleOf": 2 },
+        "fps": {
+          "type": "object", "additionalProperties": false,
+          "required": ["n", "d"],
+          "properties": {
+            "n": { "type": "integer", "minimum": 1, "maximum": 120000 },
+            "d": { "type": "integer", "minimum": 1, "maximum": 1001 }
+          }
+        },
+        "container": { "const": "mp4" },
+        "videoCodec": { "const": "h264" },
+        "audioSampleRate": { "const": 48000 },
+        "audioChannels": { "const": 2 },
+        "tailSeconds": { "type": "number", "minimum": 0, "maximum": 10 },
+        "colorSpace": { "const": "rec709" }
+      }
+    },
+    "extensions": { "type": "object" }
+  },
+  "$defs": {
+    "id": { "type": "string", "minLength": 1, "maxLength": 256 },
+    "path": {
+      "type": "string", "minLength": 1, "maxLength": 1024,
+      "pattern": "^(?!/)(?!.*\\\\)(?!.*(?:^|/)\\.\\.?(?:/|$))(?!.*:)(?!.*//)[^\\u0000-\\u001f]+$"
+    },
+    "rational": {
+      "type": "object", "additionalProperties": false,
+      "required": ["n", "d"],
+      "properties": {
+        "n": { "type": "integer", "minimum": 0, "maximum": 2147483647 },
+        "d": { "type": "integer", "minimum": 1, "maximum": 2147483647 }
+      }
+    },
+    "position": {
+      "type": "object", "additionalProperties": false,
+      "required": ["measureId", "beat"],
+      "properties": {
+        "measureId": { "$ref": "#/$defs/id" },
+        "beat": { "$ref": "#/$defs/rational" }
+      }
+    },
+    "range": {
+      "type": "object", "additionalProperties": false,
+      "required": ["from", "to"],
+      "properties": { "from": { "$ref": "#/$defs/position" }, "to": { "$ref": "#/$defs/position" } }
+    },
+    "selector": {
+      "type": "object", "additionalProperties": false,
+      "required": ["partId"],
+      "properties": {
+        "partId": { "$ref": "#/$defs/id" },
+        "voiceId": { "$ref": "#/$defs/id" },
+        "staff": { "type": "integer", "minimum": 1, "maximum": 64 }
+      }
+    }
+  }
+}

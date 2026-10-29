@@ -1,0 +1,21 @@
+{
+  "format": "scorefilm",
+  "version": "1.0.0",
+  "profile": "scorefilm-mac-v1",
+  "projectId": "f1a4e363-f647-409e-9e5b-0d4e6530ba05",
+  "title": "原创四小节钢琴与小提琴示例",
+  "files": {
+    "notation": "score.musicxml",
+    "settings": "project.json"
+  },
+  "integrity": {
+    "score.musicxml": "ac03476c6e3b6bc28e54620f16e637f4360d853569c3f465acc399437ee0e219",
+    "project.json": "0dcae8ce4dc66c95c93b471f5e2ef973f54e455a28983702839bc4cc4489feb1"
+  },
+  "requiredCapabilities": [
+    "notation.musicxml4",
+    "routing.segment",
+    "visual.trails.v1",
+    "export.mp4"
+  ]
+}

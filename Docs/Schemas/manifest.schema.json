@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ScoreFilm manifest version 1 draft",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["format", "version", "profile", "projectId", "title", "files", "integrity", "requiredCapabilities"],
+  "properties": {
+    "format": { "const": "scorefilm" },
+    "version": { "const": "1.0.0" },
+    "profile": { "const": "scorefilm-mac-v1" },
+    "projectId": { "type": "string", "format": "uuid" },
+    "title": { "type": "string", "minLength": 1, "maxLength": 512 },
+    "files": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["notation", "settings"],
+      "properties": {
+        "notation": { "$ref": "#/$defs/path" },
+        "settings": { "$ref": "#/$defs/path" }
+      }
+    },
+    "integrity": {
+      "type": "object",
+      "minProperties": 2,
+      "propertyNames": { "$ref": "#/$defs/path" },
+      "additionalProperties": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+    },
+    "requiredCapabilities": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "pattern": "^[a-z][a-z0-9.-]+$" }
+    },
+    "extensions": { "type": "object" }
+  },
+  "$defs": {
+    "path": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1024,
+      "pattern": "^(?!/)(?!.*\\\\)(?!.*(?:^|/)\\.\\.?(?:/|$))(?!.*:)(?!.*//)[^\\u0000-\\u001f]+$",
+      "description": "Container-relative path. Extraction must also reject symlinks and enforce canonical containment."
+    }
+  }
+}

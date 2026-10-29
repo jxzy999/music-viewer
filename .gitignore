@@ -1,0 +1,11 @@
+.DS_Store
+.build/
+.swiftpm/
+dist/
+Outputs/
+Tools/Notation/node_modules/
+*.xcuserstate
+xcuserdata/
+# Reference screen recordings stay local; they are not application resources.
+/files/*.MP4
+/files/*.mp4

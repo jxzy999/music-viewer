@@ -1,0 +1,54 @@
+{
+  "version": "1.0.0",
+  "scoreAxis": { "referencePartId": "P1" },
+  "performance": {
+    "defaultTempoQPM": 96,
+    "tempoScale": 1,
+    "fermataMultiplier": 1.5,
+    "humanize": { "seed": 7, "timingJitterMS": 0, "velocityJitter": 0 }
+  },
+  "instruments": [
+    {
+      "id": "piano", "displayName": "钢琴",
+      "bank": { "kind": "builtin", "key": "piano-v1" },
+      "program": 0, "bankMSB": 121, "bankLSB": 0,
+      "gainDB": -6, "pan": -0.15
+    },
+    {
+      "id": "violin", "displayName": "小提琴",
+      "bank": { "kind": "builtin", "key": "violin-v1" },
+      "program": 40, "bankMSB": 121, "bankLSB": 0,
+      "gainDB": -8, "pan": 0.15
+    }
+  ],
+  "partInstruments": { "P1": "piano", "P2": "piano" },
+  "routes": [
+    {
+      "id": "lead-after-m3",
+      "selector": { "partId": "P1", "voiceId": "1" },
+      "range": {
+        "from": { "measureId": "p1-m3", "beat": { "n": 0, "d": 1 } },
+        "to": { "measureId": "p1-m4", "beat": { "n": 4, "d": 1 } }
+      },
+      "instrumentId": "violin", "priority": 100
+    }
+  ],
+  "layout": { "paper": "a4", "orientation": "portrait", "staffScale": 1, "preserveSourceBreaks": true },
+  "visual": {
+    "preset": "cinematic-paper",
+    "voiceColors": [
+      { "selector": { "partId": "P1", "voiceId": "1" }, "color": "#6EDBFFFF" },
+      { "selector": { "partId": "P2", "voiceId": "1" }, "color": "#F6BF73FF" },
+      { "selector": { "partId": "P2", "voiceId": "2" }, "color": "#BAA3FFFF" }
+    ],
+    "effects": { "trailMode": "auto", "trailHistoryMS": 220, "maxTrailLanes": 4, "sustainMode": "pulse", "repeatNoteMode": "pulse" },
+    "noteOverrides": [ { "noteId": "p1m2n2", "trail": "off" } ]
+  },
+  "camera": { "preset": "cinematicFollow", "focusPartIds": ["P1", "P2"], "lookAheadSeconds": 1.2, "motionIntensity": 0.35 },
+  "export": {
+    "width": 1920, "height": 1080, "fps": { "n": 60, "d": 1 },
+    "container": "mp4", "videoCodec": "h264",
+    "audioSampleRate": 48000, "audioChannels": 2,
+    "tailSeconds": 2, "colorSpace": "rec709"
+  }
+}

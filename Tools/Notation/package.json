@@ -1,0 +1,9 @@
+{
+  "name": "scorefilm-notation-resources",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Pinned, offline notation engine for the native ScoreFilm app",
+  "dependencies": {
+    "opensheetmusicdisplay": "2.2.1"
+  }
+}
