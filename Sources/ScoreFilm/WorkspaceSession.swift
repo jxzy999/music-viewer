@@ -30,11 +30,13 @@ final class WorkspaceSession {
     private(set) var isLibraryProject = false
     var libraryProjects: [UserProjectSummary] = []
     var libraryError: String?
+    private(set) var deletingLibraryProject: UUID?
     @ObservationIgnored weak var window: NSWindow?
     @ObservationIgnored var openingURL: URL?
     private(set) var isClosing = false
     @ObservationIgnored private var job: Task<Void, Never>?
     @ObservationIgnored private var autosaveJob: Task<Void, Never>?
+    @ObservationIgnored private var libraryJob: Task<Void, Never>?
     @ObservationIgnored private var cancelledJobs: [Task<Void, Never>] = []
     @ObservationIgnored private var closingTask: Task<Void, any Error>?
     @ObservationIgnored private var closed = false
@@ -72,6 +74,39 @@ final class WorkspaceSession {
         do { libraryProjects = try await UserLibrary.store.projects(); libraryError = nil }
         catch { libraryError = "无法读取我的工程：\(error.localizedDescription)" }
         recoveryURL = RecoveryStore.latest()
+    }
+
+    func checkLibraryProjectCanBeTrashed(_ id: UUID) -> Bool {
+        guard project == nil, !isClosing, deletingLibraryProject == nil else { return false }
+        if SessionRegistry.shared.libraryOwner(of: id) != nil {
+            error = "此工程正在另一个窗口打开，请先关闭该工程或返回首页，再移到废纸篓。"
+            return false
+        }
+        if SessionRegistry.shared.isDeletingLibraryProject(id) {
+            error = "此工程正在移到废纸篓，请稍后刷新列表。"; return false
+        }
+        return true
+    }
+
+    func moveLibraryProjectToTrash(_ summary: UserProjectSummary) {
+        guard checkLibraryProjectCanBeTrashed(summary.id) else { return }
+        guard SessionRegistry.shared.beginLibraryDeletion(summary.id) else {
+            error = "此工程正在移到废纸篓，请稍后刷新列表。"; return
+        }
+        deletingLibraryProject = summary.id
+        libraryJob = Task {
+            defer {
+                SessionRegistry.shared.endLibraryDeletion(summary.id)
+                deletingLibraryProject = nil
+            }
+            do {
+                try await UserLibrary.store.moveToTrash(summary)
+                await refreshLibrary()
+            } catch {
+                self.error = "无法移到废纸篓：\(error.localizedDescription)"
+                await refreshLibrary()
+            }
+        }
     }
 
     func openExample(_ example: ExampleScore) {
@@ -130,6 +165,9 @@ final class WorkspaceSession {
 
     func open(_ url: URL, example: Bool = false, recovered: Bool = false) {
         guard !isClosing else { return }
+        if UserLibrary.contains(url), let id = UUID(uuidString: url.deletingPathExtension().lastPathComponent), SessionRegistry.shared.isDeletingLibraryProject(id) {
+            error = "此工程正在移到废纸篓，请稍后刷新列表。"; return
+        }
         if !example && !recovered, let owner = SessionRegistry.shared.owner(of: url) {
             owner.window?.makeKeyAndOrderFront(nil); NSApp.activate(ignoringOtherApps: true); return
         }
@@ -470,6 +508,7 @@ final class WorkspaceSession {
             let autosave = autosaveJob; autosave?.cancel(); autosaveJob = nil
             for task in pending { await task.value }
             await autosave?.value
+            await libraryJob?.value
             if dirty, let snapshot = project {
                 let workspaceID = recoveryWorkspaceID
                 _ = try await Self.persist(snapshot, managed: isLibraryProject, workspaceID: workspaceID)
@@ -505,6 +544,7 @@ final class WorkspaceSession {
     private var waitingForWindow = false
     private var hasPresentedWindow = false
     private var lastExternal: [URL: Date] = [:]
+    private var libraryDeletions: Set<UUID> = []
     // Register only the session retained by a mounted window. SwiftUI can
     // construct and discard @State initial values while reconciling views.
     func add(_ session: WorkspaceSession) {
@@ -524,6 +564,16 @@ final class WorkspaceSession {
             return opened.standardizedFileURL.resolvingSymlinksInPath() == canonical
         }
     }
+    func libraryOwner(of id: UUID) -> WorkspaceSession? {
+        sessions.allObjects.first { $0.isLibraryProject && $0.project?.id == id }
+            ?? owner(of: UserLibrary.store.projectURL(for: id))
+    }
+    func beginLibraryDeletion(_ id: UUID) -> Bool {
+        guard !libraryDeletions.contains(id), libraryOwner(of: id) == nil else { return false }
+        libraryDeletions.insert(id); return true
+    }
+    func endLibraryDeletion(_ id: UUID) { libraryDeletions.remove(id) }
+    func isDeletingLibraryProject(_ id: UUID) -> Bool { libraryDeletions.contains(id) }
     func openExternal(_ urls: [URL]) {
         logger.info("Dispatching external open: \(urls.count, privacy: .public) items, \(urls.filter(\.isFileURL).count, privacy: .public) files, \(self.sessions.allObjects.count, privacy: .public) workspaces")
         let now = Date()

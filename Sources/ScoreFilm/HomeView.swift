@@ -3,6 +3,7 @@ import ScoreCore
 
 struct HomeView: View {
     @Bindable var session: WorkspaceSession
+    @State private var projectToTrash: UserProjectSummary?
 
     var body: some View {
         ScrollView {
@@ -30,7 +31,12 @@ struct HomeView: View {
                 }
 
                 VStack(alignment: .leading, spacing: 12) {
-                    Text("我的工程").font(.title2.weight(.semibold))
+                    HStack {
+                        Text("我的工程").font(.title2.weight(.semibold))
+                        Spacer()
+                        Button("刷新", systemImage: "arrow.clockwise") { Task { await session.refreshLibrary() } }
+                            .buttonStyle(.borderless)
+                    }
                     if let error = session.libraryError {
                         Text(error).foregroundStyle(.red)
                         Button("重新读取") { Task { await session.refreshLibrary() } }
@@ -38,26 +44,47 @@ struct HomeView: View {
                         Text("修改示例的设置后，你的副本会出现在这里。").foregroundStyle(.secondary)
                     } else {
                         ForEach(session.libraryProjects) { project in
-                            Button {
-                                session.open(UserLibrary.store.projectURL(for: project.id))
-                            } label: {
-                                HStack(spacing: 12) {
-                                    Image(systemName: "doc.text").font(.title2).foregroundStyle(.tint)
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        Text(project.title + " · 我的版本").font(.headline)
-                                        Text("\(project.partCount) 个轨道 · \(project.noteCount) 个音符").font(.caption).foregroundStyle(.secondary)
-                                    }
-                                    Spacer()
-                                    Text(project.modified.formatted(date: .abbreviated, time: .shortened)).font(.caption).foregroundStyle(.secondary)
-                                    Image(systemName: "chevron.right").foregroundStyle(.tertiary)
-                                }.padding(14).contentShape(Rectangle())
-                            }.buttonStyle(.plain).background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 10))
+                            HStack(spacing: 0) {
+                                Button {
+                                    session.open(UserLibrary.store.projectURL(for: project.id))
+                                } label: {
+                                    HStack(spacing: 12) {
+                                        Image(systemName: "doc.text").font(.title2).foregroundStyle(.tint)
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            Text(project.title + " · 我的版本").font(.headline)
+                                            Text("\(project.partCount) 个轨道 · \(project.noteCount) 个音符").font(.caption).foregroundStyle(.secondary)
+                                        }
+                                        Spacer()
+                                        Text(project.modified.formatted(date: .abbreviated, time: .shortened)).font(.caption).foregroundStyle(.secondary)
+                                        Image(systemName: "chevron.right").foregroundStyle(.tertiary)
+                                    }.padding(14).contentShape(Rectangle())
+                                }.buttonStyle(.plain)
+                                Button(role: .destructive) { requestTrash(project) } label: { Image(systemName: "trash") }
+                                    .buttonStyle(.borderless).padding(.trailing, 16)
+                                    .help("将个人工程移到废纸篓")
+                                    .accessibilityLabel("移到废纸篓：\(project.title)，\(project.modified.formatted(date: .abbreviated, time: .shortened))")
+                            }
+                            .background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 10))
+                            .contextMenu {
+                                Button("移到废纸篓", systemImage: "trash", role: .destructive) { requestTrash(project) }
+                            }
                         }
                     }
                 }
             }.padding(32).frame(maxWidth: 1100, alignment: .leading).frame(maxWidth: .infinity)
         }
+        .disabled(session.deletingLibraryProject != nil)
+        .alert("将工程移到废纸篓？", isPresented: Binding(get: { projectToTrash != nil }, set: { if !$0 { projectToTrash = nil } }), presenting: projectToTrash) { project in
+            Button("移到废纸篓", role: .destructive) { session.moveLibraryProjectToTrash(project); projectToTrash = nil }
+            Button("取消", role: .cancel) { projectToTrash = nil }
+        } message: { project in
+            Text("“\(project.title)”\n修改于 \(project.modified.formatted(date: .abbreviated, time: .shortened))\n\n可从访达的废纸篓恢复，恢复后点击首页「刷新」。")
+        }
         .task { await session.refreshLibrary() }
+    }
+
+    private func requestTrash(_ project: UserProjectSummary) {
+        if session.checkLibraryProjectCanBeTrashed(project.id) { projectToTrash = project }
     }
 }
 
