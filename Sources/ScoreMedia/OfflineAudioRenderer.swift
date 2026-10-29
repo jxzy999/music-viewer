@@ -1,5 +1,6 @@
 import Foundation
 import AVFAudio
+import AudioToolbox
 import Accelerate
 import ScoreCore
 
@@ -84,11 +85,8 @@ public actor OfflineAudioRenderer {
                     vDSP_vsma(inputChannels[channel], 1, &volume, mixedChannels[channel], 1, mixedChannels[channel], 1, vDSP_Length(input.frameLength))
                 }
             }
-            for channel in 0..<2 {
-                var value: Float = 0
-                vDSP_maxmgv(mixedChannels[channel], 1, &value, vDSP_Length(count)); peak = max(peak, value)
-                vDSP_maxmgv(referenceChannels[channel], 1, &value, vDSP_Length(count)); referencePeak = max(referencePeak, value)
-            }
+            peak = max(peak, try Self.validatedPeak(mixed))
+            referencePeak = max(referencePeak, try Self.validatedPeak(reference))
             try file?.write(from: mixed)
             position += Int64(count)
             progress(0.8 + 0.1 * Double(position) / Double(max(1, frames)))
@@ -138,6 +136,12 @@ public actor OfflineAudioRenderer {
             guard samplers.count < 128 else { throw ScoreError.unsupported("此曲需要超过 128 个独立乐器实例，暂不支持。") }
             let sampler = AVAudioUnitSampler()
             sampler.auAudioUnit.isRenderingOffline = true
+            // Disk streaming can emit corrupt PCM during fast offline rendering
+            // even with the offline hint. Make samples resident when loading
+            // the instrument, before the first render.
+            var streamFromDisk: UInt32 = 0
+            let streamStatus = AudioUnitSetProperty(sampler.audioUnit, kMusicDeviceProperty_StreamFromDisk, kAudioUnitScope_Global, 0, &streamFromDisk, UInt32(MemoryLayout<UInt32>.size))
+            guard streamStatus == noErr else { throw ScoreError.invalid("无法配置乐器的离线采样模式：\(streamStatus)") }
             let bankURL: URL
             if note.instrument.bank.kind == "builtin" { bankURL = MediaResources.soundBank }
             else {
@@ -219,15 +223,9 @@ public actor OfflineAudioRenderer {
             let status = try engine.renderOffline(frames, to: buffer)
             if status == .success {
                 guard buffer.frameLength == frames else { throw ScoreError.invalid("离线合成返回了不完整音频块。") }
+                let peak = try Self.validatedPeak(buffer)
                 try file?.write(from: buffer)
                 position += Int64(frames); retries = 0
-                var peak: Float = 0
-                if let channels = buffer.floatChannelData {
-                    for channel in 0..<Int(format.channelCount) {
-                        var value: Float = 0
-                        vDSP_maxmgv(channels[channel], 1, &value, vDSP_Length(frames)); peak = max(peak, value)
-                    }
-                }
                 silentFrames = peak < 0.0001 ? silentFrames + Int64(frames) : 0
                 globalPeak = max(globalPeak, peak)
                 if position >= minimumEnd, eventIndex == events.count, silentFrames >= Int64(rate * 0.4) { break }
@@ -269,6 +267,22 @@ public actor OfflineAudioRenderer {
         progress(1)
         completed = true
         return RenderedAudio(url: url, frameCount: position, sampleRate: rate)
+    }
+
+    // Sum-of-squares propagates NaN/Infinity; max-magnitude alone can miss
+    // NaN values and silently turn a corrupt render into an inaudible cache.
+    static func validatedPeak(_ buffer: AVAudioPCMBuffer) throws -> Float {
+        guard let channels = buffer.floatChannelData else { throw ScoreError.invalid("音频缓冲格式无效。") }
+        var peak: Float = 0
+        for channel in 0..<Int(buffer.format.channelCount) {
+            var energy: Float = 0
+            vDSP_svesq(channels[channel], 1, &energy, vDSP_Length(buffer.frameLength))
+            guard energy.isFinite else { throw ScoreError.invalid("乐器合成产生了无效采样，已停止生成音频。") }
+            var value: Float = 0
+            vDSP_maxmgv(channels[channel], 1, &value, vDSP_Length(buffer.frameLength))
+            peak = max(peak, value)
+        }
+        return peak
     }
 
     private func outputGain(peak: Float, referencePeak: Float, masterVolume: Double) -> Float {
