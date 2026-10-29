@@ -1,3 +1,2 @@
-Traditional; Steve Dunlop, Mutopia-2014/03/30-1247 (public domain). Violin/piano adaptation and phrasing: Music Viewer.
-https://www.mutopiaproject.org/cgibin/piece-info.cgi?id=1247
+Anonymous, Greensleeves to a Ground with Division; complete fifteen divisions from the 1705 fourth edition of Playford's Division Violin, second part; typeset by Allen Garvin, Mutopia-2009/12/15-1730, Public Domain. Music Viewer complete violin/piano adaptation: all fifteen source divisions, all source pitches, slurs and each original volta 2 retained; the first three implicit notes of division 5 are explicitly notated as quarters, correcting the source's inherited dotted halves which overfill its first 3/2 measure. The source's own eight-measure ground bass accompanies each division on a piano bass staff. No extra harmony is added. Source half-note=80, quarter-note=160.
 The source engraving was dedicated to the public domain by its typesetter.

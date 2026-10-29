@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "profile": "scorefilm-mac-v1",
   "projectId": "3ed4bd40-7a5c-5ecf-bc5f-6d2a9bf32ffa",
-  "title": "欢乐颂 / Ode to Joy",
+  "title": "欢乐颂：小提琴与钢琴完整编曲 / Ode to Joy",
   "files": {
     "notation": "score.musicxml",
     "settings": "project.json"
@@ -15,8 +15,9 @@
     "export.mp4"
   ],
   "integrity": {
-    "score.musicxml": "57bdd31fcb82421157cf554fae094e5fc290c3cbb9a5f2845a9c347eb125f09f",
-    "project.json": "953956b55b8d6ce65baa33aad40796c6d5384243f832f779bad3b1676097ceae",
-    "Licenses/score.txt": "e1379c626544c96ca8e0d21c683410635c18d3b885f33fe0d7fceffa1a8e2dff"
+    "score.musicxml": "b67e22d8dd2ef0173fd2c918db8f524b595eae3d17be2f3b5067360bd1e448f5",
+    "project.json": "ce330afe8e72f088873282e325e4107bc6ba5d5c9ba443e464dc87ffa23d5510",
+    "Licenses/score.txt": "4c8c1c19880eb44a2863d8ac00f9e211f50d1819e0c0e705db5903a9eb7228c2",
+    "Metadata/completeness.json": "1461245771af04ebfd79c40dc2e43afd2c26c6c481b69681dc14032223eb2b49"
   }
 }

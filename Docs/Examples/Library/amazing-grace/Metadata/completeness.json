@@ -1,0 +1,111 @@
+{
+  "printedMeasures": 50,
+  "quarterBeats": "429/2",
+  "musicSeconds": 165.86913086913086,
+  "wholeScoreRepeats": 0,
+  "laneQuarterBeats": [
+    "429/2",
+    "429/2",
+    "429/2",
+    "429/2"
+  ],
+  "laneMidiRanges": [
+    [
+      62,
+      82
+    ],
+    [
+      56,
+      72
+    ],
+    [
+      44,
+      58
+    ],
+    [
+      39,
+      58
+    ]
+  ],
+  "sections": [
+    {
+      "bar": 0,
+      "name": "前奏 · Introduction",
+      "tempo": 66,
+      "dynamics": [
+        62,
+        56
+      ],
+      "bars": 4,
+      "quarterBeats": "18",
+      "musicSHA256": "493441875661e436faffc701933d2962d278a1772ec704999d3d12dd098adceb"
+    },
+    {
+      "bar": 4,
+      "name": "完整主题 · Theme",
+      "tempo": 78,
+      "dynamics": [
+        82,
+        58
+      ],
+      "bars": 17,
+      "quarterBeats": "72",
+      "musicSHA256": "3949f3399176ba6967a6ffdc63038cc1520c0006e626ba5b2964790dd77e33a7"
+    },
+    {
+      "bar": 21,
+      "name": "器乐对答 · Instrumental interlude",
+      "tempo": 78,
+      "dynamics": [
+        80,
+        66
+      ],
+      "bars": 8,
+      "quarterBeats": "36",
+      "musicSHA256": "cbb43fc85dd5becaf844b41fef975679d327b6eddc6eef5e8d30c6b07f5481e8"
+    },
+    {
+      "bar": 29,
+      "name": "钢琴再现 · Piano return",
+      "tempo": 84,
+      "dynamics": [
+        58,
+        84
+      ],
+      "bars": 17,
+      "quarterBeats": "72",
+      "musicSHA256": "ece3e5cb60cb0dac02a03031515abe0c84a5bc32f9fd33d98d5b483694ad68cc"
+    },
+    {
+      "bar": 46,
+      "name": "尾声 · Coda",
+      "tempo": 66,
+      "dynamics": [
+        72,
+        60
+      ],
+      "bars": 4,
+      "quarterBeats": "33/2",
+      "musicSHA256": "58c0efbd1856e2f210cd204799fdcd511b3cbe10a3a1572db6e8f5758086e03d"
+    }
+  ],
+  "sourceTuneMeasures": 17,
+  "sourceTuneSHA256": "3949f3399176ba6967a6ffdc63038cc1520c0006e626ba5b2964790dd77e33a7",
+  "authorship": "Original complete instrumental arrangement by Music Viewer; based on the credited hymn source.",
+  "completeTunePresentations": [
+    {
+      "bar": 4,
+      "bars": 17,
+      "lane": 0,
+      "instrument": "violin",
+      "octaveChange": 0
+    },
+    {
+      "bar": 29,
+      "bars": 17,
+      "lane": 1,
+      "instrument": "piano",
+      "octaveChange": -1
+    }
+  ]
+}

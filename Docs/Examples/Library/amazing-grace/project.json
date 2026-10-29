@@ -4,7 +4,7 @@
     "referencePartId": "P1"
   },
   "performance": {
-    "defaultTempoQPM": 90,
+    "defaultTempoQPM": 66,
     "tempoScale": 1,
     "fermataMultiplier": 1.5,
     "humanize": {
@@ -76,6 +76,13 @@
           "voiceId": "2"
         },
         "color": "#BAA3FFFF"
+      },
+      {
+        "selector": {
+          "partId": "P2",
+          "voiceId": "3"
+        },
+        "color": "#F397BAFF"
       }
     ],
     "effects": {

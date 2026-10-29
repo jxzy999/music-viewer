@@ -46,11 +46,16 @@ swift test --filter PianoOnsetTests
 
 ## 首页曲谱库
 
-五首可播放示例由 `script/build_example_library.py` 生成。《致爱丽丝》直接取自标注 OpenScore (CC0) 的 MusicXML，其余四首取自 Mutopia 的明确来源，并从登记的 LilyPond 数据转写／改编为 MusicXML。原始来源保存在 `Docs/Examples/Sources/`，可读 MusicXML 与工程设置保存在 `Docs/Examples/Library/`，应用加载 `Sources/ScoreFilm/Resources/Examples/*.scorefilm`。每个工程都保留许可文件。
+五首完整演奏示例由 `script/build_example_library.py` 确定性生成。原始来源在 `Docs/Examples/Sources/`，可读 MusicXML、工程设置、许可和完整性报告在 `Docs/Examples/Library/`，应用加载 `Sources/ScoreFilm/Resources/Examples/*.scorefilm`。每个工程都内含 `Licenses/score.txt` 与 `Metadata/completeness.json`；重新生成不访问网络、不安装依赖，不修改用户个人工程。
 
-《加沃特回旋曲》选取主题，小提琴双音声部保留、省略装饰音；《欢乐颂》和《绿袖子》由公有领域排版的四声部安排为小提琴与钢琴；《奇异恩典》从 Breizh Partitions 的风笛改编版保留旋律并新增钢琴伴奏。后者与巴赫的改编数据遵循 CC BY-SA 3.0，其余来源的排版者声明贡献至公有领域。逐首署名、来源与改动见[应用内示例说明](../Sources/ScoreFilm/Resources/Examples/README.md)，设置窗口也提供入口。此声明针对曲谱数据，不是整个应用代码的许可声明。
+- 《致爱丽丝》使用全部 106 个书面小节，第一第二结尾和原谱反复展开为 127 次小节访问、1020 次起音；原速四分音符 72，音乐 156.25 秒。固定源 SHA-256 为 `f665fc5d0c8ad5c96e7e099a4bf927756d1087ea5a58d0d85816c2e8c3530f5c`。`compile_fur_elise.py` 将 3 个装饰音按明示挤占策略写为实音，将 14 处有量震音写为十六分重击；和弦一起重击，全部主音、三连音、踏板、连奏和真实音高保留。原始 OpenScore CC0 源档保持不变。
+- 巴赫《加沃特回旋曲》由 `compile_bach_gavotte.py` 完整转写 102 个源小节、两声部和全部插部。6 处颤音和 1 处波音显式实音化；弱起的双声部空排版占位被压缩。基础音高与时值对照来源官方 MIDI 的 763 个事件全部匹配，源双声部另外 4 个同音事件在 MIDI 中被合并，生成版继续保留。只反复源谱开头，111 次小节访问、872 次起音，110 QPM 下约 235.636 秒。来源 Mutopia 1471，改编曲谱按 CC BY-SA 3.0。
+- 《绿袖子》改用 [Mutopia 1730 的完整历史器乐变奏](https://www.mutopiaproject.org/cgibin/piece-info.cgi?id=1730)，来源为 1705 年 Playford《Division Violin》影印本，Allen Garvin 排版并贡献至公有领域。全部 15 个变奏及同源固定低音由 `compile_greensleeves.py` 合为小提琴与钢琴，保留每段原有反复，120 个书面小节、240 次访问、2076 次起音，二分音符 80，音乐 540 秒。来源 SHA-256 `67ab58455b600931aa85b06056f0611fc35468a1161c19007360804aeca14601`。第 5 变奏开头 3 音的源隐含时值使小节超出 3/2 拍，明确校正为四分音符；其余 795 个旋律时值及全部 798 个音高与官方 MIDI 相符。旧版 hymn tune 源档继续保留作来源历史，不再作为当前内置谱。
+- 《欢乐颂》与《奇异恩典》在完整传统主题的基础上，由 `compile_duet_arrangements.py` 创作完整独立器乐编曲，分别 56、50 小节，约 143.954、165.869 秒；包括前奏、完整主题、答奏／对答、再现或变奏、尾声，没有增加整曲循环。小提琴和钢琴两次完整主题都与固定源旋律逐音高、时值及偏移核对。《欢乐颂》采用 Mutopia 528 公有领域 hymn 主题，新增编曲数据按 CC0 提供；《奇异恩典》基于 Mutopia 1832，改编数据继续按 CC BY-SA 3.0 提供。这不是贝多芬第九交响曲第四乐章全长版，也不把原创前尾奏称作历史原谱的缺失段落。
 
-按用户最终选择，以《致爱丽丝》钢琴独奏主题替代《Rush E》。《致爱丽丝》原文件来自 [sightreader/sheet-music 的 MusicXML 镜像](https://github.com/sightreader/sheet-music/blob/master/Beethoven%20-%20Bagatelle%20No.%2025%20%28Fur%20Elise%29.musicxml)，文件标明 OpenScore (CC0)、来源为 MuseScore 4053926。原文件 SHA-256 为 `f665fc5d0c8ad5c96e7e099a4bf927756d1087ea5a58d0d85816c2e8c3530f5c`。本例仅保留开头主题，省去第一结尾括号并补足弱起，按四分音符 66 演奏；不标作完整原曲。此主题源谱没有显式 slur/tie，不补造发光连线。
+完整逐首署名、改动和许可见[应用内示例说明](../Sources/ScoreFilm/Resources/Examples/README.md)，设置窗口也提供入口。此说明针对曲谱数据，不是整个应用代码的许可声明。既有个人工程副本保留原内容，不随内置模板更新而被覆盖。
+
+旧《致爱丽丝》主题工程原样保存在 `Tests/Fixtures/FurEliseTheme.scorefilm`，继续用于两处历史漏音和音量回归，不再作为可见的内置示例。Ode 与 Grace 的源主题 MusicXML 也保存在测试语料中，用于验证完整版没有截掉或改写主题；前者沿用公有领域声明，后者继续按 CC BY-SA 3.0 提供。
 
 ## 可下载的 MusicXML 资源
 
@@ -58,7 +63,7 @@ swift test --filter PianoOnsetTests
 
 | 资源 | 格式与用途 | 下载及使用说明 |
 | --- | --- | --- |
-| [致爱丽丝 MusicXML](https://github.com/sightreader/sheet-music/blob/master/Beethoven%20-%20Bagatelle%20No.%2025%20%28Fur%20Elise%29.musicxml) | 可直接下载 `.musicxml`；本次下载文件约 370 KB | 原文件中有 OpenScore (CC0) 与源站署名，已保留到本项目来源档案；应用示例使用主题选段 |
+| [致爱丽丝 MusicXML](https://github.com/sightreader/sheet-music/blob/master/Beethoven%20-%20Bagatelle%20No.%2025%20%28Fur%20Elise%29.musicxml) | 可直接下载 `.musicxml`；本次下载文件约 370 KB | 原文件中有 OpenScore (CC0) 与源站署名，已保留到本项目来源档案；应用示例现使用完整原曲 |
 | [MusicXML 官方样例](https://www.musicxml.com/music-in-musicxml/example-set/) | `.musicxml`、`.mxl`；也有全部样例的 ZIP | 无需安装工具，逐曲下载；包含完整曲目与首页选段，部分现代作品只授予该网站展示许可，不统一视为 App 内置授权 |
 | [music21 曲库目录](https://music21.org/music21docs/about/referenceCorpus.html) | 大量 `.mxl`、`.xml`，也包含其他格式 | 官方文档列出具体文件路径，可从项目曲库获取；[许可说明](https://music21.org/music21docs/moduleReference/moduleCorpus.html)要求按曲目来源理解许可，不等同于软件代码许可 |
 | [PDMX](https://github.com/pnlong/PDMX) | 大规模数据集，包含 `.mxl`、PDF、MIDI 与元数据 | 从项目链接的 Zenodo 下载；优先结合 `no_license_conflict` 与 `all_valid` 筛选，保留单曲来源与许可元数据 |

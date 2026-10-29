@@ -106,7 +106,7 @@ private final class ScoreReader {
             }
         }
         let ornamentNames = Set(root.descendants("ornaments").flatMap { $0.children.map(\.name) }).subtracting(["accidental-mark"])
-        let unsupported = Set(["grace", "cue", "trill-mark", "tremolo", "turn", "mordent", "glissando", "slide", "swing", "arpeggiate", "non-arpeggiate", "scordatura", "senza-misura", "octave-shift"]).union(ornamentNames)
+        let unsupported = Set(["grace", "cue", "trill-mark", "tremolo", "turn", "mordent", "glissando", "slide", "swing", "arpeggiate", "non-arpeggiate", "scordatura", "senza-misura"]).union(ornamentNames)
         for tag in unsupported.sorted() where !root.descendants(tag).isEmpty {
             diagnostics.append(ScoreDiagnostic("此曲谱含 \(tag)，该演奏解释尚未验证；已保留原谱，暂不允许导出不完整的演奏。", blocking: true))
         }
@@ -190,6 +190,19 @@ private final class ScoreReader {
                     let staff = child.value("staff").flatMap(Int.init); let voice = child.value("voice")
                     if let element = child.child("sound") { try sound(element, base: element.child("offset") == nil ? position : cursor, staff: staff, voice: voice) }
                     for type in child.all("direction-type") {
+                        // MusicXML pitch already contains the performed octave;
+                        // octave-shift changes notation placement, not playback.
+                        // Marks can be out of order in polyphonic XML, so their
+                        // document order is not used to infer an audio shift.
+                        for shift in type.all("octave-shift") {
+                            guard let kind = shift.attributes["type"], ["up", "down", "stop", "continue"].contains(kind),
+                                  let size = Int(shift.attributes["size"] ?? "8"), [8, 15, 22].contains(size),
+                                  let number = Int(shift.attributes["number"] ?? "1"), (1...16).contains(number),
+                                  let staff = Int(child.value("staff") ?? "1"), (1...32).contains(staff) else {
+                                diagnostics.append(ScoreDiagnostic("八度线的显示类型、尺寸或编号无效或尚未支持，已保留原谱并阻止演奏。", blocking: true))
+                                continue
+                            }
+                        }
                         if child.child("sound")?.attributes["dynamics"] == nil, let dynamic = type.child("dynamics")?.children.first?.name {
                             velocity = ["ppp": 20, "pp": 32, "p": 48, "mp": 60, "mf": 76, "f": 92, "ff": 108, "fff": 120][dynamic] ?? velocity
                             dynamics.append((try start.adding(position), staff, voice, velocity))

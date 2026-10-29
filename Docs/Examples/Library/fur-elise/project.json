@@ -4,7 +4,7 @@
     "referencePartId": "P1"
   },
   "performance": {
-    "defaultTempoQPM": 66,
+    "defaultTempoQPM": 72,
     "tempoScale": 1,
     "fermataMultiplier": 1.5,
     "humanize": {

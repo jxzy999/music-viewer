@@ -1,0 +1,111 @@
+{
+  "printedMeasures": 56,
+  "quarterBeats": "224",
+  "musicSeconds": 143.95382395382396,
+  "wholeScoreRepeats": 0,
+  "laneQuarterBeats": [
+    "224",
+    "224",
+    "224",
+    "224"
+  ],
+  "laneMidiRanges": [
+    [
+      61,
+      81
+    ],
+    [
+      57,
+      74
+    ],
+    [
+      40,
+      60
+    ],
+    [
+      31,
+      50
+    ]
+  ],
+  "sections": [
+    {
+      "bar": 0,
+      "name": "前奏 · Introduction",
+      "tempo": 84,
+      "dynamics": [
+        64,
+        58
+      ],
+      "bars": 4,
+      "quarterBeats": "16",
+      "musicSHA256": "c3c9ed33d223e66cda1f253702a3ab33d1316e21519990af186b40d6f81e7ef8"
+    },
+    {
+      "bar": 4,
+      "name": "完整主题 · Theme",
+      "tempo": 96,
+      "dynamics": [
+        82,
+        62
+      ],
+      "bars": 16,
+      "quarterBeats": "64",
+      "musicSHA256": "f316b3048de734b5006fd5eb587569bd849f255ea083116a987b13423aff2214"
+    },
+    {
+      "bar": 20,
+      "name": "钢琴答奏 · Piano dialogue",
+      "tempo": 88,
+      "dynamics": [
+        62,
+        82
+      ],
+      "bars": 16,
+      "quarterBeats": "64",
+      "musicSHA256": "f9a4ba04ad97e0cd6deeb423a96832be7895f06b57dc906381388656e9010d7c"
+    },
+    {
+      "bar": 36,
+      "name": "终段变奏 · Final variation",
+      "tempo": 108,
+      "dynamics": [
+        90,
+        70
+      ],
+      "bars": 16,
+      "quarterBeats": "64",
+      "musicSHA256": "3c747cdd30e6415daee7cd407955e53d4f24340da3eddc53b560332099304d4e"
+    },
+    {
+      "bar": 52,
+      "name": "尾声 · Coda",
+      "tempo": 72,
+      "dynamics": [
+        78,
+        65
+      ],
+      "bars": 4,
+      "quarterBeats": "16",
+      "musicSHA256": "7d5677eb3475de9169853ca60c2c12ddbd0d0f0d5e3a87ad0fdd1c67d46cbb58"
+    }
+  ],
+  "sourceTuneMeasures": 16,
+  "sourceTuneSHA256": "68bfcc7815764eb89feb388fc172883ea5e2e239d3a3490c7d09faf5b7745d48",
+  "authorship": "Original complete instrumental arrangement by Music Viewer; based on the credited hymn source.",
+  "completeTunePresentations": [
+    {
+      "bar": 4,
+      "bars": 16,
+      "lane": 0,
+      "instrument": "violin",
+      "octaveChange": 0
+    },
+    {
+      "bar": 20,
+      "bars": 16,
+      "lane": 1,
+      "instrument": "piano",
+      "octaveChange": 0
+    }
+  ]
+}

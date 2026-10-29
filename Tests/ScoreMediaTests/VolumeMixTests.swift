@@ -67,7 +67,7 @@ final class VolumeMixTests: XCTestCase {
 
     func testQuietPianoGetsAnAudibleDefaultWithoutClipping() async throws {
         let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
-        let project = try ProjectFile.load(root.appendingPathComponent("Sources/ScoreFilm/Resources/Examples/FurElise.scorefilm"))
+        let project = try ProjectFile.load(root.appendingPathComponent("Tests/Fixtures/FurEliseTheme.scorefilm"))
         let folder = FileManager.default.temporaryDirectory.appendingPathComponent("PianoLevel-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: folder) }

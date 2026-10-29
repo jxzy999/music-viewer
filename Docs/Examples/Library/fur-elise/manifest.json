@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "profile": "scorefilm-mac-v1",
   "projectId": "2b2eaeb6-f2a5-5774-95ac-8c56ee54fd6c",
-  "title": "致爱丽丝（主题选段）/ Für Elise",
+  "title": "致爱丽丝 / Für Elise — WoO 59",
   "files": {
     "notation": "score.musicxml",
     "settings": "project.json"
@@ -15,8 +15,9 @@
     "export.mp4"
   ],
   "integrity": {
-    "score.musicxml": "3301843b23fad0b91fa7ed125598901b533adb34b4941e5cc2258178bbde891b",
-    "project.json": "68e422f32e4a61539de717b92f78811eb368edde258ab44f1315ce163533ae94",
-    "Licenses/score.txt": "6be3926f8919bacc75bdbab843f8d02f329b9257cd924cd660295f6f612cf86a"
+    "score.musicxml": "135ebdd8d70729afc20fc714cf9de7245fb9d7f4961350f494f26469ba33a977",
+    "project.json": "36cffb9084327d54e4335e70bbda636047cfa9933acf096b84d21adcacd0cc79",
+    "Licenses/score.txt": "3b441174a91a671531c2166be1bed40df0407cdf0f0e7b3fd13de85a97daaa38",
+    "Metadata/completeness.json": "59381ef27e6a104012b3feb88a545037b960bcb7cacc4d9d3f13bf463412551c"
   }
 }

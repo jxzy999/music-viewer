@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "profile": "scorefilm-mac-v1",
   "projectId": "e4b4d7b8-5ede-5938-824b-8d25a5e00b85",
-  "title": "加沃特回旋曲（主题选段）/ Gavotte en Rondeau",
+  "title": "加沃特回旋曲（完整乐章）/ Gavotte en Rondeau",
   "files": {
     "notation": "score.musicxml",
     "settings": "project.json"
@@ -15,8 +15,9 @@
     "export.mp4"
   ],
   "integrity": {
-    "score.musicxml": "ca611586f7f7ec7c33124bdb9321f5091aa0319dc30a33045eaf76c62bd9fdad",
+    "score.musicxml": "9c12e2bfe5bf3e15be35fe6dd69b46398569e6435d7ba1d8c0babc6e6fe503d2",
     "project.json": "61241e04e6a791fe53cf280055b2b35c2cceae2bd8657aa3eda637ccba8c15ff",
-    "Licenses/score.txt": "c01d0015008165ab0fedc19c7972fc6c21d82002f21187812cca47430411aff2"
+    "Licenses/score.txt": "ac27e08292c78a38537b559642c3345c314dd09a649389f3427c9ab5d22a23e2",
+    "Metadata/completeness.json": "8e08c3c50af8a141887750b703895a906c72f13166947a62565407eaab7966d3"
   }
 }

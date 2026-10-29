@@ -1,6 +1,7 @@
 .DS_Store
 .build/
 .swiftpm/
+__pycache__/
 dist/
 Outputs/
 Tools/Notation/node_modules/

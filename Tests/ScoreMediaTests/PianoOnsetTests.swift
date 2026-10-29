@@ -37,7 +37,7 @@ final class PianoOnsetTests: XCTestCase {
 
     func testPianoThemeKeepsWrittenNotesAudibleInBothPasses() async throws {
         let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
-        let template = root.appendingPathComponent("Sources/ScoreFilm/Resources/Examples/FurElise.scorefilm")
+        let template = root.appendingPathComponent("Tests/Fixtures/FurEliseTheme.scorefilm")
         let folder = FileManager.default.temporaryDirectory.appendingPathComponent("PianoOnset-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: folder) }

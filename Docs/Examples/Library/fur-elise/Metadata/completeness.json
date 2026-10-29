@@ -1,0 +1,15 @@
+{
+  "sourceSHA256": "f665fc5d0c8ad5c96e7e099a4bf927756d1087ea5a58d0d85816c2e8c3530f5c",
+  "writtenMeasures": 106,
+  "expectedVisits": 127,
+  "expectedQuarterBeats": 187.5,
+  "tempoQPM": 72,
+  "expectedMusicSeconds": 156.25,
+  "sourceGraceNotes": 3,
+  "measuredTremolos": 14,
+  "addedTremoloAttacks": 69,
+  "expectedSoundingNotes": 1020,
+  "sourcePitchedNotes": 815,
+  "writtenPitchedNotes": 884,
+  "credit": "L. van Beethoven, WoO 59; complete 106-measure score. OpenScore (CC0), https://musescore.com/score/4053926; MusicXML mirror: sightreader/sheet-music. Music Viewer performance edition: all sections and original first/second endings retained; 3 grace notes borrow up to a 32nd note each (at most half the host duration) from the following note; 14 measured single tremolos are written as sixteenth-note reattacks, including complete chords; incomplete ending measures are explicitly marked; performed pitches and octave-display lines retained. Source tempo quarter=72. https://creativecommons.org/publicdomain/zero/1.0/"
+}

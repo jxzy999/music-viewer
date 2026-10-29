@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "profile": "scorefilm-mac-v1",
   "projectId": "12557f35-53dd-545f-a46e-0e51546d4c5d",
-  "title": "奇异恩典 / Amazing Grace",
+  "title": "奇异恩典：小提琴与钢琴完整编曲 / Amazing Grace",
   "files": {
     "notation": "score.musicxml",
     "settings": "project.json"
@@ -15,8 +15,9 @@
     "export.mp4"
   ],
   "integrity": {
-    "score.musicxml": "ce34e864f5835f9a3f7dd16f015cfaeab36991837851ee00091505c950a5fb9d",
-    "project.json": "4f35f52b4fd2bd0ac5a49e79a9cbf9c01b58f3da5db546b34ad39891750b97cf",
-    "Licenses/score.txt": "4e8c8f73cf7eef500e1a307cd51dfb32bcd8b8a4ec5a9fd9a1e263a62b952cbe"
+    "score.musicxml": "402576f01ef8ce9d285e365dc1de5267c3fd618b3fc6d3907b2479fce64c8259",
+    "project.json": "a6e713a079932c21fe3d6abe73fced2093727035957035839b90ddc74ac47fde",
+    "Licenses/score.txt": "d38780ebe30dfd15bf45c56fb8d2efc1306ed01bf5b8db03d550380a449c0ff0",
+    "Metadata/completeness.json": "7bba0c5718d4f8876ea7eba25aa9a376ec9659d6382b58048acbda7ddc54635c"
   }
 }

@@ -1,0 +1,2 @@
+# Preserve the upstream score source byte-for-byte for checksum verification.
+/Docs/Examples/Sources/greensleeves-divisions.ly -whitespace

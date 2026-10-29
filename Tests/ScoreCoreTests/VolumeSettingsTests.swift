@@ -14,7 +14,7 @@ final class VolumeSettingsTests: XCTestCase {
         XCTAssertEqual(project.settings.performance.masterVolume ?? 1, 1)
         project.settings.performance.voiceVolumes = [VoiceVolume(partId: "P1", voiceId: "1", volume: 4), VoiceVolume(partId: "P1", voiceId: "5", volume: 0)]
         let plan = try PerformanceCompiler.compile(project)
-        XCTAssertEqual(plan.notes.count, 106)
+        XCTAssertEqual(plan.notes.count, original.notes.count)
         XCTAssertEqual(plan.notes.map(\.pitch), original.notes.map(\.pitch))
         XCTAssertEqual(plan.notes.map(\.velocity), original.notes.map(\.velocity))
         XCTAssertEqual(plan.notes.map(\.start), original.notes.map(\.start))

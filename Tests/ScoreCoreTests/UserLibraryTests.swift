@@ -12,10 +12,7 @@ final class UserLibraryTests: XCTestCase {
             let plan = try PerformanceCompiler.compile(project)
             XCTAssertGreaterThan(plan.duration, 20, filename)
             XCTAssertGreaterThan(plan.notes.count, 40, filename)
-            if filename == "FurElise.scorefilm" {
-                // The source theme has no explicit slur/tie relationships.
-                XCTAssertTrue(plan.trails.isEmpty, filename)
-            } else { XCTAssertFalse(plan.trails.isEmpty, filename) }
+            XCTAssertFalse(plan.trails.isEmpty, filename)
             if filename == "FurElise.scorefilm" {
                 XCTAssertEqual(Set(plan.notes.map { $0.instrument.id }), ["piano"])
                 XCTAssertEqual(project.score.parts.count, 1)
